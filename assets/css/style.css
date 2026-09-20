@@ -29,7 +29,7 @@ ul{margin:0 0 1.2rem;padding-left:1.3rem}
 .button-row{display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin-top:2.3rem}
 .button{display:inline-flex;align-items:center;justify-content:space-between;gap:1.8rem;min-height:54px;padding:12px 22px;border:1px solid transparent;border-radius:4px;font-size:.94rem;font-weight:700;line-height:1.3;transition:background .2s ease,transform .2s ease}
 .button:hover{text-decoration:none;transform:translateY(-2px)}
-.button::after,.text-link::after,.card-link::after,.header-contact::after,.footer-external::after,.pagination a::before,.pagination a::after{content:'';display:inline-block;flex:none;width:1.1em;height:1.1em;background:currentColor;-webkit-mask:url('../icons/arrow-up-right.svg') center/contain no-repeat;mask:url('../icons/arrow-up-right.svg') center/contain no-repeat}
+.button::after,.text-link::after,.card-link::after,.header-contact::after,.pagination a::before,.pagination a::after{content:'';display:inline-block;flex:none;width:1.1em;height:1.1em;background:currentColor;-webkit-mask:url('../icons/arrow-up-right.svg') center/contain no-repeat;mask:url('../icons/arrow-up-right.svg') center/contain no-repeat}
 .button--text::after,.card-link::after,.text-link::after,.pagination a::before,.pagination a::after{-webkit-mask-image:url('../icons/arrow-right.svg');mask-image:url('../icons/arrow-right.svg')}
 .pagination a::before{transform:rotate(180deg)}
 .pagination a::after{display:none}
@@ -120,7 +120,16 @@ body.menu-open{overflow:hidden}
 .project-hero__title h1{max-width:990px;margin:0;color:#fff;font-size:clamp(2.3rem,5.2vw,4.25rem)}
 .project-hero__date{margin:22px 0 8px;color:var(--accent);font-size:.85rem}
 .project-hero__intro{max-width:880px;margin:0;font-size:clamp(1.2rem,1.8vw,1.5rem);line-height:1.5}
-.project-hero__video{margin-top:18px}
+.project-video{padding-bottom:clamp(72px,9vw,110px)}
+.project-video__player{width:min(100%,980px);margin-inline:auto}
+.project-video__preview{display:block;overflow:hidden;border:1px solid var(--line);background:var(--panel);color:var(--text)}
+.project-video__preview:hover{border-color:var(--accent);text-decoration:none}
+.project-video__poster{position:relative;display:grid;place-items:center;aspect-ratio:16/9;background:#202020}
+.project-video__poster img{width:100%;height:100%;object-fit:contain}
+.project-video__play{position:absolute;display:grid;place-items:center;width:clamp(70px,9vw,100px);aspect-ratio:1;border:2px solid #fff;border-radius:50%;background:var(--primary);color:#fff;box-shadow:0 4px 24px #0008;transition:transform .2s ease,background .2s ease}
+.project-video__preview:hover .project-video__play{transform:scale(1.07);background:var(--primary-hover)}
+.project-video__play svg{width:50%;height:50%;margin-left:6px}
+.project-video__iframe{display:block;width:100%;aspect-ratio:16/9;border:1px solid var(--line);background:#202020}
 .service-sections{border-top:1px solid var(--line)}
 .service-detail{display:grid;grid-template-columns:100px 1fr;gap:40px;padding:60px 0;border-bottom:1px solid var(--line)}
 .service-detail>div{max-width:790px}
@@ -179,7 +188,10 @@ body.menu-open{overflow:hidden}
 .footer-main h2{margin:0 0 20px;font:700 .78rem Roboto,sans-serif;letter-spacing:.12em;text-transform:uppercase}
 .footer-main>div:not(:first-child)>a{display:block;width:fit-content;margin-bottom:10px;color:var(--muted);font-size:.89rem}
 .footer-main>div:not(:first-child)>a:hover{color:var(--accent)}
-.footer-external{display:inline-flex!important;align-items:center;gap:.4rem}
+.footer-social{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0 20px}
+.footer-social a{display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid var(--line);border-radius:4px;color:var(--muted);transition:color .2s ease,border-color .2s ease,background .2s ease}
+.footer-social a:hover{color:var(--accent);border-color:var(--accent);background:var(--panel);text-decoration:none}
+.footer-social svg{display:block;width:22px;height:22px;fill:currentColor}
 .footer-bottom{display:flex;justify-content:space-between;gap:24px;padding-block:20px;border-top:1px solid var(--line);color:var(--muted);font-size:.76rem}
 .footer-bottom p{margin:0}
 .footer-bottom nav{display:flex;gap:20px}

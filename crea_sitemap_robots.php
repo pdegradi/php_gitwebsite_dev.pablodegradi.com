@@ -24,9 +24,9 @@ $excludeFilesPHP = ["build-static.php", "progetto.php"];
 // Filename glob patterns to skip (matched against the filename only).
 $excludePatternsPHP = ['*.part.php'];
 
-// Full public URL of the live site, no trailing slash (e.g. 'https://example.com').
-// Required: without it the URLs in the sitemap/robots.txt would be invalid.
-$siteUrl = 'https://dev.pablodegradi.com';
+// Read the public URL from includes/config.php below, so page metadata and
+// the generated sitemap always use the same domain.
+$siteUrl = '';
 
 // Prefix for every page URL, only if the site lives in a subpath
 // (e.g. '/blog'). Empty if it's deployed at the domain root.
@@ -162,12 +162,12 @@ function generateSitemap(string $siteRoot, array $urls, array $articleDates, str
 line('== Generazione robots.txt e sitemap.xml (deploy PHP live) ==');
 line();
 
-if ($siteUrl === '') {
-    fail('Imposta $siteUrl in cima a questo file (es. https://tuosito.it) prima di lanciarlo.');
-}
-
 define('FRAMEWORK_ENTRY', true);
 require $siteRoot . '/includes/config.php';
+$siteUrl = rtrim($site_url, '/');
+if ($siteUrl === '') {
+    fail('Imposta $site_url in includes/config.php prima di lanciare lo script.');
+}
 
 $publicArticles = get_public_articles($articles, $article_sort_by, $article_sort_order);
 $totalBlogPages = max(1, (int) ceil(count($publicArticles) / $blog_page_size));

@@ -36,6 +36,7 @@ $site_url         = "https://dev.pablodegradi.com";
 // Contatti: sostituisci i valori segnaposto prima della pubblicazione.
 $email            = "dev@pablodegradi.com";
 $linkedin_url     = "https://www.linkedin.com/in/pablo-degradi";
+$youtube_channel_url = "https://www.youtube.com/@pablo-sviluppo-web-e-ai";
 
 // Identità professionale e dati per le pagine legali.
 $vat_number       = "10407410967";
@@ -100,7 +101,7 @@ $articles = [
         'date' => '2026-09-20',
         'status' => 'pubblicato',
         'visible' => true,
-        'youtube_url' => '',
+        'youtube_url' => 'https://youtu.be/rIoZ-OL2Y9s',
         'sn_frontpage' => 's',
     ],
     [
@@ -123,7 +124,7 @@ $articles = [
         'date' => '2026-09-20',
         'status' => 'pubblicato',
         'visible' => true,
-        'youtube_url' => '',
+        'youtube_url' => 'https://youtu.be/NrMsr6bxyvs',
         'sn_frontpage' => 's',
     ],
 ];

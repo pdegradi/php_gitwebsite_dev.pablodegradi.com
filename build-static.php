@@ -38,9 +38,9 @@ $preserveDirsDist = ['.git', 'node_modules'];
 // below); .nojekyll/CNAME are only created once, if missing.
 $preserveFilesDist = ['.git', '.gitignore', 'robots.txt', 'CNAME', '.nojekyll'];
 
-// Full public URL for sitemap.xml / the robots.txt Sitemap line, no
-// trailing slash (e.g. 'https://example.com'). Empty = skip both.
-$siteUrl = 'https://dev.pablodegradi.com';
+// Read the public URL from includes/config.php below, so page metadata and
+// the generated sitemap always use the same domain.
+$siteUrl = '';
 
 // Prefix for every root-absolute link/asset path. Empty = deploy at
 // domain root. Set e.g. '/my-repo' for a subpath deploy.
@@ -321,6 +321,7 @@ line();
 // to read $articles and $blog_page_size for the pagination pages below.
 define('FRAMEWORK_ENTRY', true);
 require $siteRoot . '/includes/config.php';
+$siteUrl = rtrim($site_url, '/');
 
 $publicArticles = get_public_articles($articles, $article_sort_by, $article_sort_order);
 $totalBlogPages = max(1, (int) ceil(count($publicArticles) / $blog_page_size));

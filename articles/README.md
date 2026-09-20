@@ -6,7 +6,7 @@ Per aggiungere un articolo:
 
 1. Crea il prossimo file numerato in `articles/` con il solo contenuto HTML dell'articolo (senza layout).
 2. Aggiungi una voce in `$articles` dentro `includes/config.php` con `slug` senza numero, `file`, `title`, `excerpt`, `category`, `date`, `status`, `visible`, `featured_image`, `image_alt` e `gallery_folder`.
-3. Imposta `sn_frontpage => 's'` se vuoi mostrare l'articolo anche nella home. Con `n` o un altro valore apparirà solo nella pagina Progetti. `youtube_url` può contenere un link HTTPS a YouTube oppure una stringa vuota; quando è compilato, il link compare nell'articolo.
+3. Imposta `sn_frontpage => 's'` se vuoi mostrare l'articolo anche nella home. Con `n` o un altro valore apparirà solo nella pagina Progetti. `youtube_url` può contenere un link HTTPS a un video YouTube oppure una stringa vuota; quando è compilato, l'articolo mostra una grande anteprima che carica il lettore solo dopo il clic.
 4. Finché il contenuto è illustrativo, imposta `status => 'bozza'`. La pagina mostrerà l'avviso, avrà `noindex` e resterà fuori dalla sitemap. Per un articolo definitivo usa `status => 'pubblicato'`.
 5. Esegui `build-static.bat` per aggiornare `dist/`. Per la versione PHP, esegui anche `crea_sitemap_robots.php`.
 

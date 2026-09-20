@@ -30,16 +30,32 @@ $seo = [
 if (($article['status'] ?? '') === 'bozza') {
     $seo['robots'] = 'noindex, follow';
 }
+$article_schema = [
+    '@context' => 'https://schema.org',
+    '@type' => 'Article',
+    'headline' => $article['title'],
+    'description' => $seo['description'],
+    'mainEntityOfPage' => $seo['canonical'],
+    'inLanguage' => $site_lang,
+    'author' => ['@type' => 'Person', 'name' => $nome_cognome],
+];
+if (!empty($article['date'])) {
+    $article_schema['datePublished'] = $article['date'];
+}
+if ($seo['og_image'] !== '') {
+    $article_schema['image'] = $seo['og_image'];
+}
 $youtube_url = trim((string) ($article['youtube_url'] ?? ''));
-$youtube_host = strtolower((string) parse_url($youtube_url, PHP_URL_HOST));
-if ($youtube_url === '' || !filter_var($youtube_url, FILTER_VALIDATE_URL)
-    || strtolower((string) parse_url($youtube_url, PHP_URL_SCHEME)) !== 'https'
-    || !in_array($youtube_host, ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtu.be'], true)) {
+$youtube_id = youtube_video_id($youtube_url);
+if ($youtube_id === null) {
     $youtube_url = '';
+} else {
+    $seo['og_video'] = 'https://www.youtube-nocookie.com/embed/' . $youtube_id;
 }
 ob_start();
 ?>
 <article class="project-detail">
+    <script type="application/ld+json"><?= json_encode($article_schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
     <header class="project-hero wrap-wide">
         <p class="eyebrow"><a class="breadcrumb-back" href="/blog-progetti.php">Tutti i progetti</a> / <?= htmlspecialchars($article['category'] ?? 'Progetto') ?></p>
         <?php if (!empty($article['featured_image'])): ?>
@@ -52,9 +68,12 @@ ob_start();
         <?php endif; ?>
         <?php if (!empty($article['date'])): ?><p class="project-hero__date"><time datetime="<?= htmlspecialchars($article['date'], ENT_QUOTES) ?>">Pubblicato il <?= htmlspecialchars(format_article_date($article['date'])) ?></time></p><?php endif; ?>
         <p class="project-hero__intro"><?= htmlspecialchars($article['excerpt'] ?? '') ?></p>
-        <?php if ($youtube_url !== ''): ?><a class="text-link project-hero__video" href="<?= htmlspecialchars($youtube_url, ENT_QUOTES) ?>" target="_blank" rel="noopener noreferrer">Guarda il video su YouTube</a><?php endif; ?>
         <?php if (($article['status'] ?? '') === 'bozza'): ?><p class="draft-note">Contenuto in preparazione.</p><?php endif; ?>
     </header>
+    <?php if ($youtube_id !== null): ?>
+        <?php require_once __DIR__ . '/includes/components/project-video.php'; ?>
+        <?= render_project_video($article, $youtube_url, $youtube_id) ?>
+    <?php endif; ?>
     <div class="article-content wrap-content">
         <?php require __DIR__ . '/' . $article['file']; ?>
     </div>
@@ -65,4 +84,7 @@ ob_start();
 <?php
 $content = ob_get_clean();
 $page_js = '<script src="/assets/js/project-gallery.js" defer></script>';
+if ($youtube_id !== null) {
+    $page_js .= '<script src="/assets/js/project-video.js" defer></script>';
+}
 require __DIR__ . '/includes/layout/layout.php';

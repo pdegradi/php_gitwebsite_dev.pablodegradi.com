@@ -112,6 +112,34 @@ function project_url(array $article): string
     return '/progetto.php?slug=' . rawurlencode($article['slug']);
 }
 
+/** Return a video ID only for supported HTTPS YouTube video URLs. */
+function youtube_video_id(string $url): ?string
+{
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        return null;
+    }
+    $parts = parse_url($url);
+    if ($parts === false || strtolower($parts['scheme'] ?? '') !== 'https') {
+        return null;
+    }
+
+    $host = strtolower($parts['host'] ?? '');
+    $path = $parts['path'] ?? '';
+    $id = null;
+    if (in_array($host, ['youtu.be', 'www.youtu.be'], true)) {
+        $id = trim($path, '/');
+    } elseif (in_array($host, ['youtube.com', 'www.youtube.com', 'm.youtube.com'], true)) {
+        if ($path === '/watch') {
+            parse_str($parts['query'] ?? '', $query);
+            $id = $query['v'] ?? null;
+        } elseif (preg_match('~^/(?:embed|live|shorts)/([A-Za-z0-9_-]{11})/?$~', $path, $matches)) {
+            $id = $matches[1];
+        }
+    }
+
+    return is_string($id) && preg_match('/^[A-Za-z0-9_-]{11}$/', $id) ? $id : null;
+}
+
 function render_project_cards(array $articles): string
 {
     if ($articles === []) {
@@ -164,6 +192,7 @@ function render_seo_tags(array $seo): string
         'og_title'       => 'og:title',
         'og_description' => 'og:description',
         'og_image'       => 'og:image',
+        'og_video'       => 'og:video',
         'og_type'        => 'og:type',
     ];
 
