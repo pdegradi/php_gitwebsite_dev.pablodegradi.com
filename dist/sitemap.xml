@@ -1,30 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://dev.pablodegradi.com/404.html</loc>
+    <loc>https://dev.pablodegradi.com/blog-progetti.html</loc>
   </url>
   <url>
-    <loc>https://dev.pablodegradi.com/articles/0001-windows-subsystem-of-linux-in-windows-11.html</loc>
-  </url>
-  <url>
-    <loc>https://dev.pablodegradi.com/articles/0002-aggiungere-password-a-bitlocker.html</loc>
-  </url>
-  <url>
-    <loc>https://dev.pablodegradi.com/blog-2.html</loc>
-  </url>
-  <url>
-    <loc>https://dev.pablodegradi.com/blog.html</loc>
+    <loc>https://dev.pablodegradi.com/chi-sono.html</loc>
   </url>
   <url>
     <loc>https://dev.pablodegradi.com/</loc>
   </url>
   <url>
-    <loc>https://dev.pablodegradi.com/progetti.html</loc>
+    <loc>https://dev.pablodegradi.com/progetti/gestione-segnalazioni-condominiali.html</loc>
+    <lastmod>2026-09-20</lastmod>
   </url>
   <url>
-    <loc>https://dev.pablodegradi.com/servizi-ai.html</loc>
+    <loc>https://dev.pablodegradi.com/progetti/liberatorie-online-eventi.html</loc>
+    <lastmod>2026-09-20</lastmod>
   </url>
   <url>
-    <loc>https://dev.pablodegradi.com/servizi-web.html</loc>
+    <loc>https://dev.pablodegradi.com/servizi-automazioni-ai.html</loc>
+  </url>
+  <url>
+    <loc>https://dev.pablodegradi.com/servizi-consulenza-formazione.html</loc>
+  </url>
+  <url>
+    <loc>https://dev.pablodegradi.com/servizi-siti-web.html</loc>
+  </url>
+  <url>
+    <loc>https://dev.pablodegradi.com/servizi-web-app-custom.html</loc>
   </url>
 </urlset>

@@ -16,10 +16,10 @@
 $siteRoot = __DIR__;
 
 // Folders to skip when scanning for public pages (relative to $siteRoot).
-$excludeDirs = ['includes'];
+$excludeDirs = ['includes', 'articles'];
 
 // Specific PHP files to skip (relative to $siteRoot).
-$excludeFilesPHP = ["crea_sitemap_robots.php"];
+$excludeFilesPHP = ["crea_sitemap_robots.php", "progetto.php"];
 
 // Filename glob patterns to skip (matched against the filename only).
 $excludePatternsPHP = ['*.part.php'];
@@ -243,14 +243,21 @@ function runPhpPage(string $absolutePath, string $cwd, array $args = []): array
  * Rewrites root-absolute href/src refs: known pages get remapped via
  * $pageMap (.php -> .html), everything root-absolute gets $basePath prepended.
  */
-function rewriteLinks(string $html, array $pageMap, string $basePath): string
+function rewriteLinks(string $html, array $pageMap, string $basePath, string $siteUrl): string
 {
     $basePath = rtrim($basePath, '/');
 
-    return preg_replace_callback('/(href|src)="(\/[^"]*)"/', function (array $m) use ($pageMap, $basePath) {
+    $html = preg_replace_callback('/(href|src)="(\/[^"]*)"/', function (array $m) use ($pageMap, $basePath) {
         $path = $pageMap[$m[2]] ?? $m[2];
         return $m[1] . '="' . $basePath . $path . '"';
     }, $html);
+
+    // Canonical and Open Graph URLs are absolute, so map them as well.
+    uksort($pageMap, static fn ($a, $b) => strlen($b) <=> strlen($a));
+    foreach ($pageMap as $source => $target) {
+        $html = str_replace($siteUrl . $source . '"', $siteUrl . $target . '"', $html);
+    }
+    return $html;
 }
 
 /** Writes robots.txt, deleting any previous one first. */
@@ -315,10 +322,8 @@ line();
 define('FRAMEWORK_ENTRY', true);
 require $siteRoot . '/includes/config.php';
 
-$totalBlogPages = 1;
-if (isset($articles, $blog_page_size) && $blog_page_size > 0) {
-    $totalBlogPages = max(1, (int) ceil(count($articles) / $blog_page_size));
-}
+$publicArticles = get_public_articles($articles, $article_sort_by, $article_sort_order);
+$totalBlogPages = max(1, (int) ceil(count($publicArticles) / $blog_page_size));
 
 $outputPath = $siteRoot . DIRECTORY_SEPARATOR . $outputDir;
 
@@ -349,7 +354,10 @@ foreach ($pages as $relPath) {
     $pageMap['/' . $relPath] = '/' . preg_replace('/\.php$/', '.html', $relPath);
 }
 for ($p = 2; $p <= $totalBlogPages; $p++) {
-    $pageMap['/blog.php?page=' . $p] = '/blog-' . $p . '.html';
+    $pageMap['/blog-progetti.php?page=' . $p] = '/blog-progetti-' . $p . '.html';
+}
+foreach ($publicArticles as $article) {
+    $pageMap['/progetto.php?slug=' . rawurlencode($article['slug'])] = '/progetti/' . $article['slug'] . '.html';
 }
 
 
@@ -375,7 +383,7 @@ foreach ($pages as $relPath) {
         line('    ' . trim($result['stderr']));
     }
 
-    $html = rewriteLinks($result['stdout'], $pageMap, $basePath);
+    $html = rewriteLinks($result['stdout'], $pageMap, $basePath, $siteUrl);
     $htmlRelPath = $pageMap['/' . $relPath];
     $destPath = $outputPath . str_replace('/', DIRECTORY_SEPARATOR, $htmlRelPath);
     $destDir = dirname($destPath);
@@ -392,29 +400,48 @@ line();
 
 if ($totalBlogPages > 1) {
     line('Generazione pagine aggiuntive del blog (paginazione):');
-    $blogAbsolutePath = $siteRoot . DIRECTORY_SEPARATOR . 'blog.php';
+    $blogAbsolutePath = $siteRoot . DIRECTORY_SEPARATOR . 'blog-progetti.php';
 
     for ($p = 2; $p <= $totalBlogPages; $p++) {
         $result = runPhpPage($blogAbsolutePath, $siteRoot, [(string) $p]);
 
         if ($result['exitCode'] !== 0) {
-            $failures[] = "blog.php (pagina $p)";
-            line("  [ERRORE] blog.php pagina $p");
+            $failures[] = "blog-progetti.php (pagina $p)";
+            line("  [ERRORE] blog-progetti.php pagina $p");
             line('    ' . trim($result['stderr']));
             continue;
         }
         if (trim($result['stderr']) !== '') {
-            line("  [AVVISO] blog.php pagina $p");
+            line("  [AVVISO] blog-progetti.php pagina $p");
             line('    ' . trim($result['stderr']));
         }
 
-        $html = rewriteLinks($result['stdout'], $pageMap, $basePath);
-        file_put_contents($outputPath . DIRECTORY_SEPARATOR . "blog-$p.html", $html);
+        $html = rewriteLinks($result['stdout'], $pageMap, $basePath, $siteUrl);
+        file_put_contents($outputPath . DIRECTORY_SEPARATOR . "blog-progetti-$p.html", $html);
 
         $generated++;
-        line("  [OK] blog.php?page=$p -> $outputDir/blog-$p.html");
+        line("  [OK] blog-progetti.php?page=$p -> $outputDir/blog-progetti-$p.html");
     }
     line();
+}
+
+if ($publicArticles !== []) {
+    $projectOutputDir = $outputPath . DIRECTORY_SEPARATOR . 'progetti';
+    if (!is_dir($projectOutputDir)) {
+        mkdir($projectOutputDir, 0777, true);
+    }
+    foreach ($publicArticles as $article) {
+        $result = runPhpPage($siteRoot . DIRECTORY_SEPARATOR . 'progetto.php', $siteRoot, [$article['slug']]);
+        if ($result['exitCode'] !== 0 || trim($result['stderr']) !== '') {
+            $failures[] = 'progetto: ' . $article['slug'];
+            line('  [ERRORE] progetto: ' . $article['slug'] . ' ' . trim($result['stderr']));
+            continue;
+        }
+        $html = rewriteLinks($result['stdout'], $pageMap, $basePath, $siteUrl);
+        file_put_contents($projectOutputDir . DIRECTORY_SEPARATOR . $article['slug'] . '.html', $html);
+        $generated++;
+        line('  [OK] progetto: ' . $article['slug']);
+    }
 }
 
 foreach ($copyDirs as $dir) {
@@ -430,9 +457,9 @@ foreach ($copyDirs as $dir) {
 line();
 
 $articleDates = [];
-foreach ($articles as $article) {
-    if (!empty($article['file']) && !empty($article['date'])) {
-        $articleDates['/' . preg_replace('/\.php$/', '.html', $article['file'])] = $article['date'];
+foreach ($publicArticles as $article) {
+    if (!empty($article['date'])) {
+        $articleDates['/progetti/' . $article['slug'] . '.html'] = $article['date'];
     }
 }
 
@@ -442,13 +469,20 @@ line('robots.txt generato.');
 if ($siteUrl === '') {
     line('sitemap.xml NON generata: imposta $siteUrl in cima a questo file per attivarla.');
 } else {
-    generateSitemap($outputPath, array_values($pageMap), $articleDates, $siteUrl, $basePath);
+    $draftPaths = [];
+    foreach ($publicArticles as $article) {
+        if (($article['status'] ?? '') === 'bozza') {
+            $draftPaths[] = '/progetti/' . $article['slug'] . '.html';
+        }
+    }
+    $sitemapPaths = array_values(array_diff(array_values($pageMap), $draftPaths, ['/404.html', '/privacy.html', '/note-legali.html']));
+    generateSitemap($outputPath, array_values(array_unique($sitemapPaths)), $articleDates, $siteUrl, $basePath);
     line('sitemap.xml generata.');
 }
 
 line();
 line('== Riepilogo ==');
-line("Pagine generate: $generated / " . (count($pages) + max(0, $totalBlogPages - 1)));
+line("Pagine generate: $generated / " . (count($pages) + max(0, $totalBlogPages - 1) + count($publicArticles)));
 if (!empty($failures)) {
     line('Pagine con errori (NON esportate): ' . implode(', ', $failures));
     exit(1);

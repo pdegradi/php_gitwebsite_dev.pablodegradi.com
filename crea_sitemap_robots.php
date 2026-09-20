@@ -16,17 +16,17 @@
 $siteRoot = __DIR__;
 
 // Folders to skip when scanning for public pages (relative to $siteRoot).
-$excludeDirs = ['includes', 'dist'];
+$excludeDirs = ['includes', 'dist', 'articles'];
 
 // Specific PHP files to skip (relative to $siteRoot).
-$excludeFilesPHP = ["build-static.php"];
+$excludeFilesPHP = ["build-static.php", "progetto.php"];
 
 // Filename glob patterns to skip (matched against the filename only).
 $excludePatternsPHP = ['*.part.php'];
 
 // Full public URL of the live site, no trailing slash (e.g. 'https://example.com').
 // Required: without it the URLs in the sitemap/robots.txt would be invalid.
-$siteUrl = 'http://dev.pablodegradi.com';
+$siteUrl = 'https://dev.pablodegradi.com';
 
 // Prefix for every page URL, only if the site lives in a subpath
 // (e.g. '/blog'). Empty if it's deployed at the domain root.
@@ -143,7 +143,7 @@ function generateSitemap(string $siteRoot, array $urls, array $articleDates, str
 
     sort($urls);
     foreach ($urls as $url) {
-        $loc = $prefix . $url;
+        $loc = $url === 'index.php' ? $prefix : $prefix . $url;
         $xml .= "  <url>\n    <loc>" . htmlspecialchars($loc) . "</loc>\n";
         if (isset($articleDates[$url])) {
             $xml .= '    <lastmod>' . htmlspecialchars($articleDates[$url]) . "</lastmod>\n";
@@ -169,25 +169,28 @@ if ($siteUrl === '') {
 define('FRAMEWORK_ENTRY', true);
 require $siteRoot . '/includes/config.php';
 
-$totalBlogPages = 1;
-if (isset($articles, $blog_page_size) && $blog_page_size > 0) {
-    $totalBlogPages = max(1, (int) ceil(count($articles) / $blog_page_size));
-}
+$publicArticles = get_public_articles($articles, $article_sort_by, $article_sort_order);
+$totalBlogPages = max(1, (int) ceil(count($publicArticles) / $blog_page_size));
 
 $pages = findPublicPages($siteRoot, $excludeDirs, $excludeFilesPHP, $excludePatternsPHP, __FILE__);
 if (empty($pages)) {
     fail('Nessuna pagina pubblica trovata.');
 }
 
-$urls = $pages;
+$urls = array_values(array_diff($pages, ['404.php', 'privacy.php', 'note-legali.php']));
 for ($p = 2; $p <= $totalBlogPages; $p++) {
-    $urls[] = 'blog.php?page=' . $p;
+    $urls[] = 'blog-progetti.php?page=' . $p;
 }
 
 $articleDates = [];
-foreach ($articles as $article) {
-    if (!empty($article['file']) && !empty($article['date'])) {
-        $articleDates[$article['file']] = $article['date'];
+foreach ($publicArticles as $article) {
+    if (($article['status'] ?? '') === 'bozza') {
+        continue;
+    }
+    $url = 'progetto.php?slug=' . rawurlencode($article['slug']);
+    $urls[] = $url;
+    if (!empty($article['date'])) {
+        $articleDates[$url] = $article['date'];
     }
 }
 

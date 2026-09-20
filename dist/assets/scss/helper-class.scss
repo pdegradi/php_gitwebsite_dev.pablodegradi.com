@@ -67,54 +67,44 @@ $breakpoints: (
   --spacer-5: 3rem;
 
   /* Palette colori tema (stile DARK, di default) — usata da text-*, border-*, bg-* */
-  --clr-primary: #0d6efd;
-  --clr-secondary: #6c757d;
-  --clr-success: #198754;
-  --clr-warning: #ffc107;
-  --clr-danger: #dc3545;
+  --clr-primary: #0a66c2;
+  --clr-secondary: #5c5c5c;
+  --clr-success: #5e5e5e;
+  --clr-warning: #aaaaaa;
+  --clr-danger: #626262;
 
   /* Colori di contrasto, usati per il testo sopra gli sfondi colorati (text-bg-*) */
   --clr-white: #ffffff;
-  --clr-black: #212529;
+  --clr-black: #212121;
 
   /* Colori neutri di base — usati da testo body, sfondo body e bordi generici */
-  --clr-body-text: #dee2e6;
-  --clr-body-bg: #212529;
-  --clr-border: #495057;
+  --clr-body-text: #e2e2e2;
+  --clr-body-bg: #212121;
+  --clr-border: #4a4a4a;
 
   /* Raggio di arrotondamento base — usato da .rounded e dai bottoni */
   --border-radius: 0.375rem;
 }
 
 // --------------------------------------------------------------------------
-// TEMA LIGHT
-// Attivazione AUTOMATICA se il sistema operativo richiede un tema chiaro
-// (prefers-color-scheme). Il CSS non può leggere il valore della proprietà
-// "color-scheme" impostata altrove (es. html { color-scheme: dark; } nel tuo
-// altro file), quindi per uno switch MANUALE viene messo a disposizione anche
-// il selettore [data-theme="light"]: aggiungi questo attributo all'elemento
-// <html> quando vuoi forzare il tema chiaro indipendentemente dal sistema
-// operativo (es. <html data-theme="light">).
+// TEMA LIGHT OPZIONALE
+// Il sito usa il tema dark anche se il sistema operativo preferisce il tema
+// chiaro. Il tema light può essere attivato solo in modo esplicito con
+// <html data-theme="light">.
 // --------------------------------------------------------------------------
 @mixin light-theme-vars {
-  --clr-primary: #0a58ca;
-  --clr-secondary: #565e64;
-  --clr-success: #146c43;
-  --clr-warning: #997404;
-  --clr-danger: #b02a37;
+  --clr-primary: #084e95;
+  --clr-secondary: #707070;
+  --clr-success: #646464;
+  --clr-warning: #b0b0b0;
+  --clr-danger: #686868;
 
   --clr-white: #ffffff;
-  --clr-black: #212529;
+  --clr-black: #212121;
 
-  --clr-body-text: #212529;
+  --clr-body-text: #212121;
   --clr-body-bg: #ffffff;
-  --clr-border: #dee2e6;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    @include light-theme-vars;
-  }
+  --clr-border: #dedede;
 }
 
 :root[data-theme="light"] {

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione segnalazioni condominiali: guasti e interventi · Pablo Degradi</title>
+    <meta name="description" content="Come gestire le segnalazioni condominiali senza perdere richieste tra email e telefonate: ticket, stati, aggiornamenti e conferma della risoluzione.">
+    <meta property="og:title" content="Segnalazioni condominiali: come gestire guasti e interventi · Pablo Degradi">
+    <meta property="og:description" content="Un percorso chiaro per raccogliere i guasti, seguire gli interventi e confermare la soluzione. L’esempio di una web app realizzata.">
+    <meta property="og:image" content="https://dev.pablodegradi.com/assets/images/0002/segnalazioni.png">
+    <meta property="og:type" content="article">
+    <link rel="canonical" href="https://dev.pablodegradi.com/progetti/gestione-segnalazioni-condominiali.html">
+    <link rel="stylesheet" href="/assets/css/helper-class.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    </head>
+<body>
+    <a class="skip-link" href="#main-content">Vai al contenuto</a>
+    <header class="site-header">
+        <div class="wrap-wide">
+            <a class="site-brand" href="/index.html" aria-label="Pablo Degradi, home">Pablo<span class="accent-dot">.</span><small>Web developer</small></a>
+            <button class="nav-toggle" type="button" aria-label="Apri il menu" aria-controls="site-nav" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <nav class="site-nav" id="site-nav" aria-label="Navigazione principale">
+                <a href="/servizi-web-app-custom.html">Web App</a>
+                <a href="/servizi-siti-web.html">Siti Web</a>
+                <a href="/servizi-automazioni-ai.html">Automazioni e AI</a>
+                <a href="/servizi-consulenza-formazione.html">Consulenza</a>
+                <a href="/blog-progetti.html">Progetti</a>
+                <a href="/chi-sono.html">Chi sono</a>
+            </nav>
+            <a class="header-contact" href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#100;&#101;&#118;&#64;&#112;&#97;&#98;&#108;&#111;&#100;&#101;&#103;&#114;&#97;&#100;&#105;&#46;&#99;&#111;&#109;">Scrivimi</a>        </div>
+    </header>
+
+    <main id="main-content">
+        <article class="project-detail">
+    <header class="project-hero wrap-wide">
+        <p class="eyebrow"><a class="breadcrumb-back" href="/blog-progetti.html">Tutti i progetti</a> / Web app custom</p>
+                    <div class="project-hero__media">
+                <img src="/assets/images/0002/segnalazioni.png" alt="Elenco delle segnalazioni condominiali con categoria, priorità e stato" fetchpriority="high">
+                <div class="project-hero__title"><h1>Segnalazioni condominiali: come gestire guasti e interventi</h1></div>
+            </div>
+                <p class="project-hero__date"><time datetime="2026-09-20">Pubblicato il 20 settembre 2026</time></p>        <p class="project-hero__intro">Un percorso chiaro per raccogliere i guasti, seguire gli interventi e confermare la soluzione. L’esempio di una web app realizzata.</p>
+                    </header>
+    <div class="article-content wrap-content">
+        <p>Per gestire le segnalazioni condominiali in modo ordinato serve sapere che cosa è stato segnalato, chi deve intervenire, a che punto è la richiesta e se il problema è davvero risolto. Quando queste informazioni restano tra telefonate, email e messaggi, ricostruire lo stato di un guasto diventa più difficile per tutti.</p>
+
+<h2>Perché un messaggio non basta per seguire un intervento</h2>
+<p>Una telefonata può far partire un intervento, ma difficilmente conserva foto, aggiornamenti e decisioni nello stesso posto. I residenti possono chiedere più volte notizie sullo stesso guasto; l'amministratore deve cercare nelle conversazioni precedenti; per un problema nelle parti comuni possono arrivare segnalazioni duplicate.</p>
+<p>Una scheda dedicata a ogni richiesta crea un riferimento unico. Il residente può descrivere il problema e seguirne l'avanzamento; l'amministratore può annotare che cosa è stato fatto e mantenere uno storico consultabile.</p>
+
+<h2>Quali informazioni raccogliere in una segnalazione</h2>
+<p>Una richiesta utile a chi dovrà valutarla dovrebbe contenere:</p>
+<ul>
+    <li>un titolo e una descrizione comprensibile del guasto;</li>
+    <li>la categoria dell'intervento e una priorità iniziale, che l'amministratore possa rivalutare;</li>
+    <li>foto o documenti, quando aiutano a capire il problema;</li>
+    <li>l'indicazione che il guasto riguarda una singola abitazione oppure una parte comune;</li>
+    <li>gli aggiornamenti successivi, con data, autore e motivo del cambio di stato.</li>
+</ul>
+<p>Per le parti comuni, rendere visibile la richiesta agli altri residenti può aiutare a evitare duplicati. Per un problema interno all'appartamento, la visibilità deve invece restare limitata a chi lo ha aperto e all'amministratore.</p>
+
+<h2>Dalla segnalazione alla conferma della soluzione</h2>
+<p>Ho realizzato una web app che segue il percorso <strong>Inviata → Presa in carico → In lavorazione → Risolta → Chiusa</strong>. L'amministratore aggiunge una nota quando cambia lo stato, mentre commenti e notifiche email mantengono informate le persone coinvolte.</p>
+<p>Il residente crea la richiesta con descrizione, categoria, priorità, allegati e visibilità privata o condivisa. Può anche collegarla a una segnalazione già chiusa, utile quando un guasto si ripresenta nello stesso punto.</p>
+<figure>
+    <img class="zoomable" src="/assets/images/0002/nuova-segnalazione.png" alt="Modulo per aprire una segnalazione condominiale e scegliere categoria, priorità e visibilità" loading="lazy">
+    <figcaption>Il modulo di apertura raccoglie le informazioni necessarie e può richiamare un intervento passato.</figcaption>
+</figure>
+
+<h2>Un intervento risolto deve poter essere verificato</h2>
+<p>Nell'app l'amministratore non chiude direttamente la pratica quando segna il lavoro come risolto. La persona che ha aperto la segnalazione può confermare che il problema non si presenta più, oppure spiegare perché persiste. Nel secondo caso la richiesta torna in lavorazione. Solo dopo la conferma entra nello storico degli interventi.</p>
+<p>Questo passaggio evita che una pratica venga archiviata sulla base di un aggiornamento formale mentre il guasto è ancora presente. La cronologia conserva i cambi di stato, le note e i commenti collegati.</p>
+
+<h2>Quando questa soluzione è adatta</h2>
+<p>La web app è centrata sulle segnalazioni di un singolo condominio. Non include contabilità, preventivi, accessi dedicati ai fornitori o la gestione di più stabili da un unico account. È quindi utile come esempio di strumento mirato: raccoglie e rende tracciabile un processo preciso, senza cercare di sostituire tutte le attività di amministrazione condominiale.</p>
+    </div>
+            <section class="project-gallery wrap-wide" aria-labelledby="project-gallery-gestione-segnalazioni-condominiali">
+        <div class="project-gallery__heading">
+            <p class="eyebrow">Galleria</p>
+            <h2 id="project-gallery-gestione-segnalazioni-condominiali">Immagini del progetto</h2>
+        </div>
+        <div class="project-gallery__carousel" data-project-gallery tabindex="0" aria-label="Galleria immagini del progetto">
+            <div class="project-gallery__slides">
+                                    <figure class="project-gallery__slide">
+                        <div class="project-gallery__frame"><img src="/assets/images/0002/0025-EaseUS_2026_09_%208_19_51_51.png" alt="Schermata del progetto: Dashboard" loading="lazy"></div>
+                        <figcaption>Dashboard</figcaption>
+                    </figure>
+                                    <figure class="project-gallery__slide">
+                        <div class="project-gallery__frame"><img src="/assets/images/0002/0025-EaseUS_2026_09_%208_19_52_09.png" alt="Schermata del progetto: Elenco segnalazioni" loading="lazy"></div>
+                        <figcaption>Elenco segnalazioni</figcaption>
+                    </figure>
+                                    <figure class="project-gallery__slide">
+                        <div class="project-gallery__frame"><img src="/assets/images/0002/0025-EaseUS_2026_09_%208_19_52_47.png" alt="Schermata del progetto: Nuova segnalazione" loading="lazy"></div>
+                        <figcaption>Nuova segnalazione</figcaption>
+                    </figure>
+                                    <figure class="project-gallery__slide">
+                        <div class="project-gallery__frame"><img src="/assets/images/0002/0025-EaseUS_2026_09_%208_19_52_58.png" alt="Schermata del progetto: Utenti registrati" loading="lazy"></div>
+                        <figcaption>Utenti registrati</figcaption>
+                    </figure>
+                                    <figure class="project-gallery__slide">
+                        <div class="project-gallery__frame"><img src="/assets/images/0002/nuova-segnalazione.png" alt="Schermata del progetto: Nuova segnalazione" loading="lazy"></div>
+                        <figcaption>Nuova segnalazione</figcaption>
+                    </figure>
+                                    <figure class="project-gallery__slide">
+                        <div class="project-gallery__frame"><img src="/assets/images/0002/segnalazioni.png" alt="Elenco delle segnalazioni condominiali con categoria, priorità e stato" loading="lazy"></div>
+                        <figcaption>Segnalazioni</figcaption>
+                    </figure>
+                            </div>
+            <div class="project-gallery__controls" data-gallery-controls hidden>
+                <button class="project-gallery__button project-gallery__button--prev" type="button" data-gallery-prev>Precedente</button>
+                <span class="project-gallery__counter" data-gallery-counter aria-live="polite" aria-atomic="true">1 di 6</span>
+                <button class="project-gallery__button project-gallery__button--next" type="button" data-gallery-next>Successiva</button>
+            </div>
+        </div>
+    </section>
+    </article>
+<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Hai un’esigenza simile?</p><h2>Possiamo parlarne partendo dal tuo caso.</h2><p>Ogni attività ha un modo diverso di lavorare. Raccontami cosa vorresti semplificare.</p><a class="button button--primary" href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#100;&#101;&#118;&#64;&#112;&#97;&#98;&#108;&#111;&#100;&#101;&#103;&#114;&#97;&#100;&#105;&#46;&#99;&#111;&#109;&#63;&#115;&#117;&#98;&#106;&#101;&#99;&#116;&#61;&#85;&#110;&#97;&#37;&#50;&#48;&#115;&#111;&#108;&#117;&#122;&#105;&#111;&#110;&#101;&#37;&#50;&#48;&#112;&#101;&#114;&#37;&#50;&#48;&#108;&#97;&#37;&#50;&#48;&#109;&#105;&#97;&#37;&#50;&#48;&#97;&#116;&#116;&#105;&#118;&#105;&#116;&#97;">Contattami</a></div></section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap-wide footer-main">
+            <div><a class="footer-brand" href="/index.html">Pablo<span class="accent-dot">.</span></a><p>Soluzioni web su misura per professionisti e piccole imprese.</p></div>
+            <div><h2>Esplora</h2><a href="/servizi-web-app-custom.html">Web App Custom</a><a href="/servizi-siti-web.html">Siti Web</a><a href="/servizi-automazioni-ai.html">Automazioni e AI</a><a href="/servizi-consulenza-formazione.html">Consulenza e Formazione</a><a href="/blog-progetti.html">Progetti</a><a href="/chi-sono.html">Chi sono</a></div>
+            <div><h2>Contatti</h2><a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#100;&#101;&#118;&#64;&#112;&#97;&#98;&#108;&#111;&#100;&#101;&#103;&#114;&#97;&#100;&#105;&#46;&#99;&#111;&#109;">&#100;&#101;&#118;&#64;&#112;&#97;&#98;&#108;&#111;&#100;&#101;&#103;&#114;&#97;&#100;&#105;&#46;&#99;&#111;&#109;</a><a class="footer-external" href="https://www.linkedin.com/in/pablo-degradi" rel="noopener noreferrer">LinkedIn</a><p>Hai un’idea o un processo da semplificare? Scrivimi.</p></div>
+        </div>
+        <div class="wrap-wide footer-bottom">
+            <p>&copy; 2026 Pablo Degradi</p>
+            <nav aria-label="Informazioni legali"><a href="/privacy.html">Privacy e cookie</a><a href="/note-legali.html">Note legali</a></nav>
+        </div>
+    </footer>
+
+    <script src="/assets/js/main.js" defer></script>
+    <script src="/assets/js/project-gallery.js" defer></script></body>
+</html>

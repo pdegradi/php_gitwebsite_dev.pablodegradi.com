@@ -22,6 +22,31 @@ function dd($variable, $booldie = true)
         die();
 }
 
+/** Encode ASCII mail links in static HTML without changing their browser behavior. */
+function email_html_entities(string $value): string
+{
+    $encoded = '';
+    foreach (str_split($value) as $character) {
+        $encoded .= '&#' . ord($character) . ';';
+    }
+    return $encoded;
+}
+
+function render_email_link(string $email, ?string $label = null, string $class = '', string $subject = ''): string
+{
+    $href = 'mailto:' . $email;
+    if ($subject !== '') {
+        $href .= '?subject=' . rawurlencode($subject);
+    }
+
+    $class_attribute = $class === '' ? '' : ' class="' . htmlspecialchars($class, ENT_QUOTES, 'UTF-8') . '"';
+    $text = $label === null
+        ? email_html_entities($email)
+        : htmlspecialchars($label, ENT_QUOTES, 'UTF-8');
+
+    return '<a' . $class_attribute . ' href="' . email_html_entities($href) . '">' . $text . '</a>';
+}
+
 
 /**
  * funzione che uso all'interno degli articoli per tirar fuori tutte le info dell'articolo scelto
@@ -62,19 +87,59 @@ function get_sorted_articles(array $articles, string $sort_by = 'title', string 
 {
     $sorted = $articles;
 
-    usort($sorted, function ($a, $b) use ($sort_by) {
+    usort($sorted, function ($a, $b) use ($sort_by, $sort_order) {
         if ($sort_by === 'date') {
             // ISO dates (Y-m-d) sort correctly with a plain string comparison.
-            return strcmp($a['date'] ?? '', $b['date'] ?? '');
+            $comparison = strcmp($a['date'] ?? '', $b['date'] ?? '');
+        } else {
+            $comparison = strcasecmp($a['title'] ?? '', $b['title'] ?? '');
         }
-        return strcasecmp($a['title'] ?? '', $b['title'] ?? '');
+        return $sort_order === 'desc' ? -$comparison : $comparison;
     });
 
-    if ($sort_order === 'desc') {
-        $sorted = array_reverse($sorted);
+    return $sorted;
+}
+
+/** Public project articles only. */
+function get_public_articles(array $articles, string $sort_by = 'date', string $sort_order = 'desc'): array
+{
+    $public = array_values(array_filter($articles, static fn ($article) => !empty($article['visible'])));
+    return get_sorted_articles($public, $sort_by, $sort_order);
+}
+
+function project_url(array $article): string
+{
+    return '/progetto.php?slug=' . rawurlencode($article['slug']);
+}
+
+function render_project_cards(array $articles): string
+{
+    if ($articles === []) {
+        return '<p>I nuovi progetti saranno pubblicati qui.</p>';
     }
 
-    return $sorted;
+    ob_start();
+    ?>
+    <div class="project-grid">
+        <?php foreach ($articles as $article): ?>
+            <article class="project-card">
+                <div class="project-card__visual">
+                    <?php if (!empty($article['featured_image'])): ?>
+                        <img src="<?= htmlspecialchars($article['featured_image'], ENT_QUOTES) ?>" alt="<?= htmlspecialchars($article['image_alt'] ?? $article['title'], ENT_QUOTES) ?>" loading="lazy">
+                    <?php endif; ?>
+                    <span><?= htmlspecialchars($article['category'] ?? 'Progetto') ?></span>
+                </div>
+                <div class="project-card__body">
+                    <?php if (!empty($article['date'])): ?><time class="project-card__meta" datetime="<?= htmlspecialchars($article['date'], ENT_QUOTES) ?>"><?= htmlspecialchars(format_article_date($article['date'])) ?></time><?php endif; ?>
+                    <h3><a href="<?= htmlspecialchars(project_url($article), ENT_QUOTES) ?>"><?= htmlspecialchars($article['title']) ?></a></h3>
+                    <p><?= htmlspecialchars($article['excerpt'] ?? '') ?></p>
+                    <a class="text-link" href="<?= htmlspecialchars(project_url($article), ENT_QUOTES) ?>">Leggi il progetto</a>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </div>
+    <?php
+    return ob_get_clean();
 }
 
 /**
@@ -235,4 +300,3 @@ function flash_has(string $key): bool
 {
     return isset($_SESSION['_flash'][$key]);
 }
-
