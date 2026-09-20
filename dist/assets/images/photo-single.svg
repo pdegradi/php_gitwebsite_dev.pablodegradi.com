@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+  <rect width="900" height="600" fill="#1c1f26"/>
+  <circle cx="259" cy="371" r="69" fill="#c9973f" opacity="0.05"/>
+<circle cx="342" cy="432" r="98" fill="#c9973f" opacity="0.08"/>
+<circle cx="425" cy="493" r="127" fill="#c9973f" opacity="0.11"/>
+<circle cx="508" cy="554" r="66" fill="#c9973f" opacity="0.14"/>
+
+  <rect x="0.5" y="0.5" width="899" height="599" fill="none" stroke="#2b2e36" stroke-width="1"/>
+  <text x="50%" y="50%" fill="#8f8b84" font-family="Georgia, serif" font-size="50"
+        text-anchor="middle" dominant-baseline="middle">Immagine singola</text>
+</svg>

@@ -1,0 +1,677 @@
+// ==========================================================================
+// HELPER CLASS FRAMEWORK
+// Nomenclatura allineata a Bootstrap 5.3
+// ==========================================================================
+
+@use "sass:map";
+
+// --------------------------------------------------------------------------
+// CONFIGURAZIONE: breakpoint responsive (allineati a Bootstrap 5.3)
+// Definiti come mappa Sass (non var css: i breakpoint servono dentro @media
+// e le custom property non sono utilizzabili in quel contesto).
+// --------------------------------------------------------------------------
+$breakpoints: (
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px
+);
+
+// Genera un blocco @media (min-width: ...) a partire dal nome breakpoint.
+@mixin media-up($name) {
+  @if map.has-key($breakpoints, $name) {
+    @media (min-width: #{map.get($breakpoints, $name)}) {
+      @content;
+    }
+  } @else {
+    @error "Il breakpoint `#{$name}` non esiste in $breakpoints.";
+  }
+}
+
+// Esegue il contenuto una volta "senza breakpoint" (mobile-first, base)
+// e poi una volta per ciascun breakpoint dentro il relativo @media.
+// Passa al contenuto il nome del breakpoint corrente ("" per la base).
+@mixin responsive {
+  @content("");
+  @each $bp, $width in $breakpoints {
+    @include media-up($bp) {
+      @content($bp);
+    }
+  }
+}
+
+// Antepone un trattino al valore passato, solo se non vuoto.
+// dash("") => ""      dash("md") => "-md"
+@function dash($val) {
+  @if $val == "" {
+    @return "";
+  }
+  @return "-#{$val}";
+}
+
+
+// ==========================================================================
+// VARIABILI GLOBALI
+// Qui vivono solo le variabili usate da PIU' gruppi di helper class.
+// Le variabili specifiche di un solo gruppo vengono definite più sotto,
+// subito prima del codice che genera quel gruppo.
+// ==========================================================================
+:root {
+  /* Scala delle spaziature: usata da margin, padding e gap */
+  --spacer-0: 0;
+  --spacer-1: 0.25rem;
+  --spacer-2: 0.5rem;
+  --spacer-3: 1rem;
+  --spacer-4: 1.5rem;
+  --spacer-5: 3rem;
+
+  /* Palette colori tema (stile DARK, di default) — usata da text-*, border-*, bg-* */
+  --clr-primary: #0d6efd;
+  --clr-secondary: #6c757d;
+  --clr-success: #198754;
+  --clr-warning: #ffc107;
+  --clr-danger: #dc3545;
+
+  /* Colori di contrasto, usati per il testo sopra gli sfondi colorati (text-bg-*) */
+  --clr-white: #ffffff;
+  --clr-black: #212529;
+
+  /* Colori neutri di base — usati da testo body, sfondo body e bordi generici */
+  --clr-body-text: #dee2e6;
+  --clr-body-bg: #212529;
+  --clr-border: #495057;
+
+  /* Raggio di arrotondamento base — usato da .rounded e dai bottoni */
+  --border-radius: 0.375rem;
+}
+
+// --------------------------------------------------------------------------
+// TEMA LIGHT
+// Attivazione AUTOMATICA se il sistema operativo richiede un tema chiaro
+// (prefers-color-scheme). Il CSS non può leggere il valore della proprietà
+// "color-scheme" impostata altrove (es. html { color-scheme: dark; } nel tuo
+// altro file), quindi per uno switch MANUALE viene messo a disposizione anche
+// il selettore [data-theme="light"]: aggiungi questo attributo all'elemento
+// <html> quando vuoi forzare il tema chiaro indipendentemente dal sistema
+// operativo (es. <html data-theme="light">).
+// --------------------------------------------------------------------------
+@mixin light-theme-vars {
+  --clr-primary: #0a58ca;
+  --clr-secondary: #565e64;
+  --clr-success: #146c43;
+  --clr-warning: #997404;
+  --clr-danger: #b02a37;
+
+  --clr-white: #ffffff;
+  --clr-black: #212529;
+
+  --clr-body-text: #212529;
+  --clr-body-bg: #ffffff;
+  --clr-border: #dee2e6;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    @include light-theme-vars;
+  }
+}
+
+:root[data-theme="light"] {
+  @include light-theme-vars;
+}
+
+
+// ==========================================================================
+// 1. SPAZIATURE — margin, padding, gap
+// Uso: .m{lato}-{size}, .p{lato}-{size}, .gap-{size}
+// Lati: (nessuno)=tutti i lati, t=top, b=bottom, s=start(sx), e=end(dx),
+//       x=orizzontale, y=verticale. Esempi: .mt-3  .px-2  .m-auto  .mt-md-4
+// Responsive: aggiungi il breakpoint dopo il lato, es. .mt-md-3 / .p-lg-0
+// ==========================================================================
+$spacer-keys: 0 1 2 3 4 5;
+
+$margin-sides: (
+  "": (margin),
+  "t": (margin-top),
+  "b": (margin-bottom),
+  "s": (margin-left),
+  "e": (margin-right),
+  "x": (margin-left, margin-right),
+  "y": (margin-top, margin-bottom)
+);
+
+$padding-sides: (
+  "": (padding),
+  "t": (padding-top),
+  "b": (padding-bottom),
+  "s": (padding-left),
+  "e": (padding-right),
+  "x": (padding-left, padding-right),
+  "y": (padding-top, padding-bottom)
+);
+
+@include responsive using ($bp) {
+  // Margini (con variante "auto" per ogni lato)
+  @each $side, $props in $margin-sides {
+    @each $key in $spacer-keys {
+      .m#{$side}#{dash($bp)}-#{$key} {
+        @each $prop in $props {
+          #{$prop}: var(--spacer-#{$key}) !important;
+        }
+      }
+    }
+    .m#{$side}#{dash($bp)}-auto {
+      @each $prop in $props {
+        #{$prop}: auto !important;
+      }
+    }
+  }
+
+  // Padding
+  @each $side, $props in $padding-sides {
+    @each $key in $spacer-keys {
+      .p#{$side}#{dash($bp)}-#{$key} {
+        @each $prop in $props {
+          #{$prop}: var(--spacer-#{$key}) !important;
+        }
+      }
+    }
+  }
+
+  // Gap (flex/grid)
+  @each $key in $spacer-keys {
+    .gap#{dash($bp)}-#{$key} {
+      gap: var(--spacer-#{$key}) !important;
+    }
+    .row-gap#{dash($bp)}-#{$key} {
+      row-gap: var(--spacer-#{$key}) !important;
+    }
+    .column-gap#{dash($bp)}-#{$key} {
+      column-gap: var(--spacer-#{$key}) !important;
+    }
+  }
+}
+
+
+// ==========================================================================
+// 2. DISPLAY
+// Uso: .d-{value}  — es. .d-none  .d-flex  .d-md-block
+// ==========================================================================
+$display-values: none, inline, inline-block, block, grid, inline-grid, flex, inline-flex, table, table-cell, table-row;
+
+@include responsive using ($bp) {
+  @each $val in $display-values {
+    .d#{dash($bp)}-#{$val} {
+      display: #{$val} !important;
+    }
+  }
+}
+
+
+// ==========================================================================
+// 3. FLEXBOX
+// Uso: .flex-{row|column}, .justify-content-{...}, .align-items-{...},
+//      .align-self-{...}, .flex-wrap/.flex-nowrap, .flex-grow-{0|1},
+//      .flex-shrink-{0|1}, .order-{0..5}
+// Responsive: es. .flex-md-row  .justify-content-lg-between
+// ==========================================================================
+$flex-directions: row, column, row-reverse, column-reverse;
+$flex-wraps: wrap, nowrap, wrap-reverse;
+$justify-values: start, end, center, between, around, evenly;
+$align-values: start, end, center, baseline, stretch;
+$align-self-values: auto, start, end, center, baseline, stretch;
+$order-keys: 0 1 2 3 4 5;
+
+@include responsive using ($bp) {
+  @each $dir in $flex-directions {
+    .flex#{dash($bp)}-#{$dir} {
+      flex-direction: #{$dir} !important;
+    }
+  }
+
+  @each $wrap in $flex-wraps {
+    .flex#{dash($bp)}-#{$wrap} {
+      flex-wrap: #{$wrap} !important;
+    }
+  }
+
+  @each $val in $justify-values {
+    .justify-content#{dash($bp)}-#{$val} {
+      @if $val == "between" or $val == "around" or $val == "evenly" {
+        justify-content: space-#{$val} !important;
+      } @else {
+        justify-content: #{$val} !important;
+      }
+    }
+  }
+
+  @each $val in $align-values {
+    .align-items#{dash($bp)}-#{$val} {
+      align-items: #{$val} !important;
+    }
+  }
+
+  @each $val in $align-self-values {
+    .align-self#{dash($bp)}-#{$val} {
+      align-self: #{$val} !important;
+    }
+  }
+
+  .flex#{dash($bp)}-grow-0 { flex-grow: 0 !important; }
+  .flex#{dash($bp)}-grow-1 { flex-grow: 1 !important; }
+  .flex#{dash($bp)}-shrink-0 { flex-shrink: 0 !important; }
+  .flex#{dash($bp)}-shrink-1 { flex-shrink: 1 !important; }
+
+  @each $key in $order-keys {
+    .order#{dash($bp)}-#{$key} {
+      order: $key !important;
+    }
+  }
+}
+
+
+// ==========================================================================
+// 4. GRID
+// Uso: .grid-cols-{1..6} imposta il numero di colonne (grid-template-columns).
+//      .grid-auto-fit-{sm|md|lg|xl|xxl} crea colonne che si adattano
+//      automaticamente in base alla larghezza minima della cella.
+// Responsive (solo grid-cols): es. .grid-cols-md-3
+// ==========================================================================
+
+// Variabili valide solo per il gruppo grid (larghezza minima colonna auto-fit)
+:root {
+  --grid-auto-fit-sm: 10rem;
+  --grid-auto-fit-md: 14rem;
+  --grid-auto-fit-lg: 18rem;
+  --grid-auto-fit-xl: 22rem;
+  --grid-auto-fit-xxl: 26rem;
+}
+
+@include responsive using ($bp) {
+  @for $n from 1 through 6 {
+    .grid-cols#{dash($bp)}-#{$n} {
+      grid-template-columns: repeat(#{$n}, minmax(0, 1fr)) !important;
+    }
+  }
+}
+
+.grid-auto-fit-sm { grid-template-columns: repeat(auto-fit, minmax(var(--grid-auto-fit-sm), 1fr)) !important; }
+.grid-auto-fit-md { grid-template-columns: repeat(auto-fit, minmax(var(--grid-auto-fit-md), 1fr)) !important; }
+.grid-auto-fit-lg { grid-template-columns: repeat(auto-fit, minmax(var(--grid-auto-fit-lg), 1fr)) !important; }
+.grid-auto-fit-xl { grid-template-columns: repeat(auto-fit, minmax(var(--grid-auto-fit-xl), 1fr)) !important; }
+.grid-auto-fit-xxl { grid-template-columns: repeat(auto-fit, minmax(var(--grid-auto-fit-xxl), 1fr)) !important; }
+
+
+// ==========================================================================
+// 5. TESTO
+// Uso: .text-{start|center|end} (allineamento, responsive),
+//      .fw-{light|normal|semibold|bold}, .fst-italic,
+//      .text-decoration-{underline|line-through|none},
+//      .text-{lowercase|uppercase|capitalize}, .text-truncate
+// ==========================================================================
+$text-align-values: start, center, end;
+$font-weights: (light: 300, normal: 400, semibold: 600, bold: 700);
+$text-transforms: lowercase, uppercase, capitalize;
+
+@include responsive using ($bp) {
+  @each $val in $text-align-values {
+    .text#{dash($bp)}-#{$val} {
+      text-align: #{$val} !important;
+    }
+  }
+}
+
+@each $name, $weight in $font-weights {
+  .fw-#{$name} { font-weight: #{$weight} !important; }
+}
+
+.fst-italic { font-style: italic !important; }
+.fst-normal { font-style: normal !important; }
+
+.text-decoration-underline { text-decoration: underline !important; }
+.text-decoration-line-through { text-decoration: line-through !important; }
+.text-decoration-none { text-decoration: none !important; }
+
+@each $val in $text-transforms {
+  .text-#{$val} { text-transform: #{$val} !important; }
+}
+
+// Tronca il testo su una riga con puntini di sospensione
+.text-truncate {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+
+// ==========================================================================
+// 6. COLORI — testo, bordo, sfondo
+// Le variabili colore (--clr-primary ecc.) sono definite in cima al file
+// perché usate da tutti e tre i sottogruppi qui sotto.
+// Uso:
+//   .text-{primary|secondary|success|warning|danger|body}
+//   .border-{primary|secondary|success|warning|danger}
+//   .bg-{primary|secondary|success|warning|danger}
+//   .text-bg-{primary|secondary|success|warning|danger} => sfondo colorato
+//     con testo già impostato nel colore di contrasto corretto (bianco o scuro)
+// ==========================================================================
+$theme-colors: primary, secondary, success, warning, danger;
+
+// Colore testo di contrasto per ciascun colore tema (bianco tranne per warning)
+@function contrast-text($name) {
+  @if $name == "warning" {
+    @return var(--clr-black);
+  }
+  @return var(--clr-white);
+}
+
+.text-body { color: var(--clr-body-text) !important; }
+@each $name in $theme-colors {
+  .text-#{$name} { color: var(--clr-#{$name}) !important; }
+}
+
+.border { border-color: var(--clr-border) !important; }
+@each $name in $theme-colors {
+  .border-#{$name} { border-color: var(--clr-#{$name}) !important; }
+}
+
+@each $name in $theme-colors {
+  .bg-#{$name} { background-color: var(--clr-#{$name}) !important; }
+}
+
+@each $name in $theme-colors {
+  .text-bg-#{$name} {
+    background-color: var(--clr-#{$name}) !important;
+    color: #{contrast-text($name)} !important;
+  }
+}
+
+
+// ==========================================================================
+// 7. BORDI (struttura) e ARROTONDAMENTI
+// Uso struttura: .border, .border-0, .border-top/bottom/start/end
+//   (border-start/border-end usano proprietà logiche, corrette anche in RTL)
+//   Responsive: es. .border-md, .border-md-top, .border-md-0
+// Uso arrotondamenti: .rounded, .rounded-0, .rounded-sm, .rounded-lg,
+//   .rounded-circle, .rounded-pill (NON responsive)
+// ==========================================================================
+
+// Variabile valida solo per il gruppo "struttura bordi"
+:root {
+  --border-width: 1px;
+}
+
+$border-sides: (
+  "": (border),
+  "top": (border-top),
+  "bottom": (border-bottom),
+  "start": (border-inline-start),
+  "end": (border-inline-end)
+);
+
+@include responsive using ($bp) {
+  @each $side, $props in $border-sides {
+    .border#{dash($bp)}#{dash($side)} {
+      @each $prop in $props {
+        #{$prop}: var(--border-width) solid var(--clr-border) !important;
+      }
+    }
+    .border#{dash($bp)}#{dash($side)}-0 {
+      @each $prop in $props {
+        #{$prop}: 0 !important;
+      }
+    }
+  }
+}
+
+// Variabili valide solo per il gruppo "arrotondamenti"
+// (--border-radius è invece in cima al file: la riusano anche i bottoni)
+:root {
+  --border-radius-sm: 0.2rem;
+  --border-radius-lg: 0.5rem;
+  --border-radius-pill: 50rem;
+}
+
+.rounded-0 { border-radius: 0 !important; }
+.rounded { border-radius: var(--border-radius) !important; }
+.rounded-sm { border-radius: var(--border-radius-sm) !important; }
+.rounded-lg { border-radius: var(--border-radius-lg) !important; }
+.rounded-circle { border-radius: 50% !important; }
+.rounded-pill { border-radius: var(--border-radius-pill) !important; }
+
+
+// ==========================================================================
+// 8. BOTTONI
+// Uso: .btn (classe base, sempre necessaria) + UN modificatore di colore:
+//   .btn-{primary|secondary|success|warning|danger}         => bottone pieno
+//   .btn-outline-{primary|secondary|success|warning|danger} => bottone contornato
+//   Esempio: <button class="btn btn-primary">Salva</button>
+//   Stati hover, focus-visible e disabled/.disabled sono gestiti in automatico
+//   per ogni colore, senza bisogno di scriverli a mano.
+// ==========================================================================
+
+// Variabili valide solo per il gruppo bottoni
+:root {
+  --btn-padding-y: 0.4rem;
+  --btn-padding-x: 0.875rem;
+  --btn-font-size: 1.25rem;
+  --btn-font-weight: 400;
+  --btn-line-height: 1.5;
+  --btn-transition: all 0.15s ease-in-out;
+  --btn-disabled-opacity: 0.65;
+
+  /* Quanto colore originale resta nello stato hover: il resto viene
+     "mescolato" con il nero tramite color-mix() (funzione css nativa) */
+  --btn-hover-mix: 85%;
+
+  /* Spessore e opacità dell'anello di focus, ottenuti con la sintassi
+     nativa dei colori relativi rgb(from ... / opacità) — niente funzioni
+     sass, il colore dell'anello resta sempre in sync col colore del tema */
+  --btn-focus-ring-width: 0.25rem;
+  --btn-focus-ring-opacity: 0.5;
+}
+
+.btn {
+  display: inline-block;
+  font-family: inherit;
+  font-weight: var(--btn-font-weight);
+  font-size: var(--btn-font-size);
+  line-height: var(--btn-line-height);
+  color: var(--clr-black);
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border-radius: var(--border-radius);
+  transition: var(--btn-transition);
+}
+.btn:focus-visible { outline: 0; }
+.btn:disabled,
+.btn.disabled {
+  opacity: var(--btn-disabled-opacity);
+  pointer-events: none;
+}
+
+// Bottoni pieni (solid): sfondo colorato, testo a contrasto automatico
+@each $name in $theme-colors {
+  .btn-#{$name} {
+    color: #{contrast-text($name)} !important;
+    background-color: var(--clr-#{$name}) !important;
+    border-color: var(--clr-#{$name}) !important;
+  }
+  .btn-#{$name}:hover {
+    background-color: color-mix(in srgb, var(--clr-#{$name}) var(--btn-hover-mix), black) !important;
+    border-color: color-mix(in srgb, var(--clr-#{$name}) var(--btn-hover-mix), black) !important;
+  }
+  .btn-#{$name}:focus-visible {
+    box-shadow: 0 0 0 var(--btn-focus-ring-width) rgb(from var(--clr-#{$name}) r g b / var(--btn-focus-ring-opacity)) !important;
+  }
+}
+
+// Bottoni outline: solo bordo/testo colorati, sfondo pieno solo in hover
+@each $name in $theme-colors {
+  .btn-outline-#{$name} {
+    color: var(--clr-#{$name}) !important;
+    border-color: var(--clr-#{$name}) !important;
+  }
+  .btn-outline-#{$name}:hover {
+    color: #{contrast-text($name)} !important;
+    background-color: var(--clr-#{$name}) !important;
+    border-color: var(--clr-#{$name}) !important;
+  }
+  .btn-outline-#{$name}:focus-visible {
+    box-shadow: 0 0 0 var(--btn-focus-ring-width) rgb(from var(--clr-#{$name}) r g b / var(--btn-focus-ring-opacity)) !important;
+  }
+}
+
+
+// ==========================================================================
+// 9. DIMENSIONI — larghezza e altezza
+// Uso: .w-{25|50|75|100|auto}  .h-{25|50|75|100|auto}
+// ==========================================================================
+
+// Variabile valida solo per il gruppo dimensioni (riusata da w-* e h-*)
+:root {
+  --size-25: 25%;
+  --size-50: 50%;
+  --size-75: 75%;
+  --size-100: 100%;
+}
+
+$size-keys: 25 50 75 100;
+
+@each $key in $size-keys {
+  .w-#{$key} { width: var(--size-#{$key}) !important; }
+  .h-#{$key} { height: var(--size-#{$key}) !important; }
+}
+.w-auto { width: auto !important; }
+.h-auto { height: auto !important; }
+
+
+// ==========================================================================
+// 10. POSIZIONAMENTO
+// Uso: .position-{static|relative|absolute|fixed|sticky}
+//      .top-{0|50|100}  .bottom-{0|50|100}  .start-{0|50|100}  .end-{0|50|100}
+// ==========================================================================
+$position-values: static, relative, absolute, fixed, sticky;
+
+@each $val in $position-values {
+  .position-#{$val} { position: #{$val} !important; }
+}
+
+// Variabile valida solo per il gruppo posizionamento (offset top/bottom/start/end)
+:root {
+  --position-0: 0;
+  --position-50: 50%;
+  --position-100: 100%;
+}
+
+$position-sides: top, bottom, start, end;
+$position-keys: 0 50 100;
+
+@function position-prop($side) {
+  @if $side == "start" {
+    @return "inset-inline-start";
+  } @else if $side == "end" {
+    @return "inset-inline-end";
+  }
+  @return $side;
+}
+
+@each $side in $position-sides {
+  @each $key in $position-keys {
+    .#{$side}-#{$key} {
+      #{position-prop($side)}: var(--position-#{$key}) !important;
+    }
+  }
+}
+
+
+// ==========================================================================
+// 11. OVERFLOW
+// Uso: .overflow-{auto|hidden|visible|scroll}
+// ==========================================================================
+$overflow-values: auto, hidden, visible, scroll;
+
+@each $val in $overflow-values {
+  .overflow-#{$val} { overflow: #{$val} !important; }
+}
+
+
+// ==========================================================================
+// 12. OPACITÀ
+// Uso: .opacity-{25|50|75|100}
+// ==========================================================================
+
+// Variabile valida solo per il gruppo opacità
+:root {
+  --opacity-25: 0.25;
+  --opacity-50: 0.5;
+  --opacity-75: 0.75;
+  --opacity-100: 1;
+}
+
+$opacity-keys: 25 50 75 100;
+
+@each $key in $opacity-keys {
+  .opacity-#{$key} { opacity: var(--opacity-#{$key}) !important; }
+}
+
+
+// ==========================================================================
+// 13. Z-INDEX
+// Uso: .z-{0|1|2|3} — utile per gestire sovrapposizioni (es. header sticky)
+// ==========================================================================
+
+// Variabile valida solo per il gruppo z-index
+:root {
+  --z-0: 0;
+  --z-1: 1;
+  --z-2: 2;
+  --z-3: 3;
+}
+
+$z-keys: 0 1 2 3;
+
+@each $key in $z-keys {
+  .z-#{$key} { z-index: var(--z-#{$key}) !important; }
+}
+
+
+// ==========================================================================
+// 14. VARIE
+// .cursor-pointer  => mostra il puntatore a "manina" su elementi cliccabili
+// .visually-hidden  => nasconde visivamente un elemento mantenendolo
+//   leggibile dagli screen reader (usare .visually-hidden-focusable per
+//   renderlo visibile quando riceve il focus, es. link "salta al contenuto")
+// ==========================================================================
+.cursor-pointer { cursor: pointer !important; }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.visually-hidden-focusable:not(:focus):not(:focus-within) {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

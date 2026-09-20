@@ -1,0 +1,487 @@
+<?php
+define('FRAMEWORK_ENTRY', true);
+require __DIR__ . '/../includes/config.php';
+
+[
+    'title'          => $article_title,
+    'date'           => $article_date,
+    'featured_image' => $featured_image
+] = get_current_article_data($articles);
+
+ob_start();
+?>
+
+<h2>Funzionalità di base</h2>
+
+<p>Per verificare che WSL 2 sia attivo e vedere la versione del kernel:</p>
+
+<div class="code-block">
+<pre><code>wsl --status
+wsl --version</code></pre>
+</div>
+
+<p>Per vedere le distribuzioni installate</p>
+
+<div class="code-block">
+<pre><code>wsl --list --verbose</code></pre>
+</div>
+
+<p>Il comando di seguito abilita i componenti necessari, installa il kernel Linux aggiornato e scarica Ubuntu come distribuzione predefinita. Riavvia il PC quando richiesto.</p>
+
+<div class="code-block">
+<pre><code>wsl --install</code></pre>
+</div>
+
+<p>Per vedere le distribuzioni disponibili online</p>
+
+<div class="code-block">
+<pre><code>wsl --list --online</code></pre>
+</div>
+
+<p>A questo punto per installare una distribuzione specifica</p>
+
+<div class="code-block">
+<pre><code>wsl --install -d Debian
+wsl --install -d kali-linux
+wsl --install -d openSUSE-Tumbleweed
+wsl --install -d AlmaLinux-9</code></pre>
+</div>
+
+<p>Per avviare una distro</p>
+
+<div class="code-block">
+<pre><code># avvia distro di default
+wsl
+
+# avvia una distro specifica
+wsl -d Debian
+wsl -d kali-linux</code></pre>
+</div>
+
+<p>Cambiare la distribuzione predefinita associata al comando wsl</p>
+
+<div class="code-block">
+<pre><code>wsl --set-default [nomedistro]</code></pre>
+</div>
+
+<p>Per rimuovere una distribuzione</p>
+
+<div class="code-block">
+<pre><code>wsl --unregister [nomedistro]</code></pre>
+</div>
+
+<p>Di seguito alcuni comandi di gestione generale</p>
+
+<div class="code-block">
+<pre><code># Fermare tutte le distro e il processo WSL
+wsl --shutdown
+
+# Terminare una singola distro
+wsl --terminate [nomedistro]
+
+# Aggiornare il kernel WSL
+wsl --update
+
+# Eseguire come utente specifico
+wsl -d [nomedistro] -u root
+
+# Spostare una distro su un altro disco
+wsl --export [nomedistro] D:\backup.tar
+wsl --unregister [nomedistro]
+wsl --import [nomedistro] D:\WSL\Ubuntu D:\backup.tar</code></pre>
+</div>
+
+<h2>Configurazione di WSL</h2>
+
+<p>Esistono due file di configurazione con scopi diversi.</p>
+
+<ul>
+<li><code>/etc/wsl.conf</code> - configurazione per singola distro</li>
+<li><code>%USERPROFILE%\.wslconfig</code> - configurazione globale</li>
+</ul>
+
+<p>Crea o modifica <code>/etc/wsl.conf</code> dentro la distro Linux:</p>
+
+<div class="code-block">
+<pre><code>sudo nano /etc/wsl.conf
+
+[boot]
+systemd=true          # abilita systemd (raccomandato)
+
+[user]
+default=mioutente     # utente predefinito al login
+
+[network]
+hostname=mylinux      # hostname della macchina virtuale
+generateResolvConf=true
+
+[interop]
+enabled=true          # permette di lanciare .exe da Linux
+appendWindowsPath=true # aggiunge il PATH di Windows a Linux</code></pre>
+</div>
+
+<p>Dopo la modifica, riavvia la distro:</p>
+
+<div class="code-block">
+<pre><code>wsl --shutdown
+wsl -d [nomedistro]</code></pre>
+</div>
+
+<p>Crea questo file in <code>C:\Users\[utente]\.wslconfig</code> (da PowerShell):</p>
+
+<div class="code-block">
+<pre><code>notepad $env:USERPROFILE\.wslconfig
+
+[wsl2]
+memory=8GB            # RAM massima assegnata
+processors=4          # numero di CPU virtuali
+swap=2GB              # spazio di swap
+diskSize=60GB         # dimensione massima del disco virtuale
+
+[experimental]
+sparseVhd=true        # disco virtuale a espansione automatica (risparmia spazio)
+autoMemoryReclaim=gradual  # rilascia RAM inutilizzata a Windows</code></pre>
+</div>
+
+<p>Applica modifiche riavviando machina linux</p>
+
+<div class="code-block">
+<pre><code>wsl --shutdown</code></pre>
+</div>
+
+<h2>Interazione tra S.O.</h2>
+
+<h3>Interazione Windows → Linux</h3>
+
+<p>Eseguire comandi Linux direttamente da PowerShell/CMD</p>
+
+<div class="code-block">
+<pre><code># Eseguire un comando e tornare a Windows
+wsl ls -la /home
+
+# Usare una distro specifica
+wsl -d Debian -- apt list --installed
+
+# Pipe tra comandi Windows e Linux
+Get-Content C:\log.txt | wsl grep "ERROR"
+
+# Usare tool Linux su file Windows
+wsl sort -u &lt;&lt;&lt; "$(Get-Content C:\dati.txt)"</code></pre>
+</div>
+
+<p>Il filesystem di ogni distro è accessibile tramite il percorso UNC:</p>
+
+<div class="code-block">
+<pre><code>\\wsl$\Ubuntu-24.04\home\utente\
+\\wsl$\Debian\etc\</code></pre>
+</div>
+
+<p>Oppure direttamente da Esplora File digitando <code>\\wsl$</code> nella barra degli indirizzi.</p>
+
+<p>Da PowerShell puoi copiare file:</p>
+
+<div class="code-block">
+<pre><code>Copy-Item "C:\Documenti\file.txt" "\\wsl$\Ubuntu-24.04\home\utente\"</code></pre>
+</div>
+
+<p>I dischi Windows vengono montati automaticamente in <code>/mnt/</code>:</p>
+
+<div class="code-block">
+<pre><code>ls /mnt/c/Users/         # Disco C:
+ls /mnt/d/               # Disco D: (se esiste)</code></pre>
+</div>
+
+<p>Per montare manualmente un disco o una partizione:</p>
+
+<div class="code-block">
+<pre><code># Da PowerShell (Admin) — monta un disco fisico
+wsl --mount \\.\PHYSICALDRIVE1 --partition 1</code></pre>
+</div>
+
+<h3>Interazione Linux → Windows</h3>
+
+<p>Eseguire eseguibili Windows da Linux. Grazie all'interoperabilità, puoi lanciare qualsiasi .exe da dentro WSL:</p>
+
+<div class="code-block">
+<pre><code># Aprire Esplora File nella directory corrente
+explorer.exe .
+
+# Aprire un file con il programma predefinito di Windows
+cmd.exe /c start documento.pdf
+
+# Usare notepad
+notepad.exe /mnt/c/Users/utente/file.txt
+
+# Usare winget per installare software Windows
+winget.exe install Git.Git</code></pre>
+</div>
+
+<p>Accedere al filesystem Windows da Linux</p>
+
+<div class="code-block">
+<pre><code>cd /mnt/c/Users/tuoutente/Desktop
+ls /mnt/c/Program\ Files/</code></pre>
+</div>
+
+<p>Copiare file da Linux a Windows</p>
+
+<div class="code-block">
+<pre><code>cp miofile.txt /mnt/c/Users/utente/Desktop/</code></pre>
+</div>
+
+<p>Usare variabili d'ambiente di Windows</p>
+
+<div class="code-block">
+<pre><code># Leggere variabili d'ambiente Windows
+echo $WSLENV
+cmd.exe /c echo %APPDATA%</code></pre>
+</div>
+
+<p>Per condividere variabili tra i due ambienti, imposta <code>WSLENV</code> in Windows:</p>
+
+<div class="code-block">
+<pre><code># Aggiunge MYVAR al bridge WSL (valore condiviso)
+[Environment]::SetEnvironmentVariable("WSLENV", "MYVAR/u", "User")</code></pre>
+</div>
+
+<h2>Rete e Accesso ai Servizi</h2>
+
+<p>IP e hostname</p>
+
+<div class="code-block">
+<pre><code># IP della macchina WSL (varia a ogni riavvio)
+ip addr show eth0 | grep "inet "
+
+# IP della macchina Windows (gateway da Linux)
+ip route | grep default
+cat /etc/resolv.conf | grep nameserver</code></pre>
+</div>
+
+<p>Accedere a un server avviato in Linux da Windows. Se avvii un server in WSL (es. <code>python3 -m http.server 8080</code>), 
+    puoi accedervi dal browser Windows su:</p>
+
+<div class="code-block">
+<pre><code>http://localhost:8080</code></pre>
+</div>
+
+<p>WSL 2 in Windows 11 gestisce automaticamente il port forwarding per <code>localhost</code>.</p>
+
+<p>Accedere a un server Windows da Linux</p>
+
+<div class="code-block">
+<pre><code># Usa l'IP del gateway (la macchina Windows)
+curl http://$(ip route | grep default | awk '{print $3}'):3000</code></pre>
+</div>
+
+<p>Modalità Mirrored Networking (Windows 11 22H2+). Questa modalità avanzata fa sì che 
+    Linux e Windows condividano lo stesso stack di rete:</p>
+
+<div class="code-block">
+<pre><code># In .wslconfig
+
+[wsl2]
+networkingMode=mirrored</code></pre>
+</div>
+
+<p>Con questa opzione <code>localhost</code> funziona in entrambe le direzioni senza configurazioni aggiuntive.</p>
+
+<h2>Eseguire Applicazioni GUI (WSLg)</h2>
+
+<p>WSL 2 su Windows 11 include <strong>WSLg</strong>, che permette di eseguire applicazioni grafiche Linux nativamente senza configurazione aggiuntiva.</p>
+
+<div class="code-block">
+<pre><code># Installa e avvia Firefox
+sudo apt install firefox -y
+firefox &amp;
+
+# Editor grafico
+sudo apt install gedit -y
+gedit &amp;
+
+# Applicazioni GTK/Qt funzionano out-of-the-box
+sudo apt install gimp -y
+gimp &amp;</code></pre>
+</div>
+
+<p>Le finestre appaiono direttamente sul desktop Windows come normali applicazioni.</p>
+
+<h2>Systemd e Servizi</h2>
+
+<p>Con systemd=true in wsl.conf puoi gestire i servizi come su un normale Linux:</p>
+
+<div class="code-block">
+<pre><code># Avviare e abilitare SSH
+sudo systemctl start ssh
+sudo systemctl enable ssh
+sudo systemctl status ssh
+
+# Avviare Docker (senza Docker Desktop)
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Controllare tutti i servizi
+systemctl list-units --type=service --state=running</code></pre>
+</div>
+
+<h2>Importare ed Esportare Distribuzioni</h2>
+
+<p>Esportare una distro (backup)</p>
+
+<div class="code-block">
+<pre><code>wsl --export [nomedistro] C:\Backup\ubuntu-backup.tar</code></pre>
+</div>
+
+<p>Importare una distro (ripristino o clonazione)</p>
+
+<div class="code-block">
+<pre><code>wsl --import MioUbuntu C:\WSL\MioUbuntu C:\Backup\ubuntu-backup.tar --version 2</code></pre>
+</div>
+
+<p>Importare una distro personalizzata (es. Arch Linux/Rocky Linux)</p>
+
+<div class="code-block">
+<pre><code># Scarica il rootfs di Arch
+# Da gitlab.archlinux.org/archlinux/archlinux-docker/-/releases
+# Poi importa:
+wsl --import Arch C:\WSL\Arch C:\Downloads\archlinux-rootfs.tar.zst --version 2
+wsl -d Arch
+
+# esempio rockylinux
+wsl --import RockyLinux10 V:\WSL\RockyLinux10 "Z:\WSL\wsl_distro\Rocky-10-WSL-Base.latest.x86_64.wsl"
+
+# per eseguire la macchina appena importata
+wsl -d RockyLinux10</code></pre>
+</div>
+
+<p>Per rockylinux10 abbiamo che:</p>
+
+<ul>
+<li><code>RockyLinux10</code> → il nome che vuoi dare alla distro in WSL</li>
+<li><code>V:\WSL\RockyLinux10</code> → la cartella dove WSL salverà il disco virtuale (<code>.vhdx</code>). Verrà creata automaticamente</li>
+<li><code>"Z:\WSL\..."</code> → il percorso del file sorgente</li>
+</ul>
+
+<h2>Ottimizzazioni e prestazioni</h2>
+
+<p>Col tempo il file <code>.vhdx</code> cresce. Per compattarlo:</p>
+
+<div class="code-block">
+<pre><code># Prima, libera spazio dentro Linux
+wsl -d Ubuntu-24.04 -- bash -c "sudo fstrim -av"
+
+# Poi compatta da PowerShell (Admin)
+wsl --shutdown
+Optimize-VHD -Path "$env:LOCALAPPDATA\Packages\CanonicalGroupLimited.Ubuntu24.04LTS_79rhkp1fndgsc\LocalState\ext4.vhdx" -Mode Full</code></pre>
+</div>
+
+
+
+<h2>Installare un coding agent su WSL con accesso limitato a una sola cartella</h2>
+<p>In alternativa a Docker Sandboxes, un coding agent può essere eseguito dentro una macchina 
+    virtuale WSL, con accesso limitato a una singola cartella del sistema Windows invece che 
+    a tutti i dischi. L'esempio seguente usa Grok Build, ma la stessa procedura vale per 
+    qualsiasi altro agent da terminale.</p>
+
+<h4>1. Installare la VM WSL</h4>
+<p>Da PowerShell, come amministratore.</p>
+<div class="code-block">
+<pre><code>wsl --install -d Ubuntu-24.04</code></pre>
+</div>
+<p>Al riavvio si apre il terminale Ubuntu e viene chiesto di creare un utente e una password.</p>
+
+<h4>2. Aggiornare il sistema</h4>
+<div class="code-block">
+<pre><code>sudo apt update && sudo apt upgrade -y</code></pre>
+</div>
+
+<h4>3. Disabilitare il montaggio automatico dei dischi Windows</h4>
+<p>Per impostazione predefinita, WSL monta automaticamente tutti i dischi Windows sotto 
+    <code>/mnt/</code>. Per evitarlo, si modifica il file di configurazione della distribuzione.</p>
+<div class="code-block">
+<pre><code>sudo nano /etc/wsl.conf</code></pre>
+</div>
+<p>Contenuto del file.</p>
+<div class="code-block">
+<pre><code>[automount]
+enabled = false
+
+[interop]
+appendWindowsPath = false</code></pre>
+</div>
+<p>La sezione <code>interop</code> evita che all'avvio compaiano messaggi di errore <code>Failed to translate</code>, 
+legati al tentativo di importare il <code>PATH</code> di Windows quando i dischi non sono più montati.</p>
+
+<h4>4. Riavviare WSL</h4>
+<p>Da PowerShell, non dal terminale Ubuntu.</p>
+<div class="code-block">
+<pre><code>wsl --shutdown</code></pre>
+</div>
+<p>Si riapre poi il terminale Ubuntu perché le modifiche abbiano effetto.</p>
+
+<h4>5. Montare manualmente solo la cartella di lavoro</h4>
+<p>Con l'automount disattivato, nessun disco Windows è raggiungibile finché non viene montato esplicitamente. 
+    Si crea un mountpoint dedicato e si monta solo la cartella desiderata.</p>
+<div class="code-block">
+<pre><code>sudo mkdir -p /mnt/project
+sudo mount -t drvfs 'E:\SVL\web_site\php_dbbackup' /mnt/project</code></pre>
+</div>
+<p>Verifica del mount.</p>
+<div class="code-block">
+<pre><code>ls /mnt/project
+mount | grep project</code></pre>
+</div>
+<p>Da questo momento <code>/mnt/project</code> è l'unico punto di accesso al filesystem Windows: nessun'altra 
+cartella o disco è raggiungibile dall'interno della VM.</p>
+
+<h4>6. Installare l'agent</h4>
+<p>L'installazione va eseguita nella home di Ubuntu, non dentro il mountpoint.</p>
+<div class="code-block">
+<pre><code>curl -fsSL https://x.ai/cli/install.sh | bash</code></pre>
+</div>
+
+<h4>7. Configurare l'autenticazione</h4>
+<p>Per evitare il login via browser, si imposta la chiave API come variabile d'ambiente permanente.</p>
+<div class="code-block">
+<pre><code>echo 'export XAI_API_KEY="xai-il-tuo-token"' >> ~/.bashrc
+source ~/.bashrc</code></pre>
+</div>
+
+<h4>8. Avviare l'agent sulla cartella montata</h4>
+<div class="code-block">
+<pre><code>cd /mnt/project
+grok</code></pre>
+</div>
+
+<h4>Cambiare cartella di lavoro</h4>
+<p>Per lavorare su un progetto diverso non serve modificare <code>wsl.conf</code> né reinstallare nulla: basta 
+smontare la cartella corrente e montarne una nuova sullo stesso mountpoint.</p>
+<div class="code-block">
+<pre><code>sudo umount /mnt/project
+sudo mount -t drvfs 'E:\altro-progetto' /mnt/project
+cd /mnt/project
+grok</code></pre>
+</div>
+
+<h4>Nota sulla persistenza del mount</h4>
+<p>Il mount manuale non è permanente: va ripetuto a ogni riavvio della VM (<code>wsl --shutdown</code> o riavvio del PC). 
+Per automatizzare il mount di una cartella fissa a ogni avvio, si può aggiungere una sezione 
+<code>boot</code> in <code>wsl.conf</code>, con il percorso scritto con doppio backslash.</p>
+<div class="code-block">
+<pre><code>[boot]
+command = "mkdir -p /mnt/project && mount -t drvfs 'E:\\SVL\\web_site\\php_dbbackup' /mnt/project"</code></pre>
+</div>
+<p>Se si cambia spesso cartella di lavoro, è comunque più pratico rimontare a mano con il comando 
+    dello step precedente piuttosto che modificare <code>wsl.conf</code> ogni volta.</p>
+
+
+<?php
+$article_body = ob_get_clean();
+
+$seo = [
+    'description' => "Guida pratica a Windows Subsystem for Linux in Windows 11: installazione, gestione delle distro, configurazione di wsl.conf e .wslconfig, integrazione tra Windows e Linux e comandi essenziali per iniziare.",
+    'og_title'     => "{$article_title} · {$site_name}",
+    'og_type'      => 'article',
+    'og_image'     => $featured_image,
+];
+
+require __DIR__ . '/../includes/layout/layout-article.php';

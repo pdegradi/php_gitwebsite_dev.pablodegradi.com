@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progetti · Pablo Dev</title>
+    <meta name="description" content="Sviluppo Software Web &amp; AI Integration">
+    <meta name="description" content="Progetti software creati: ZAMPGUI, ZampLite, PixoGUI e Pagine Html Utility.">
+    <meta property="og:title" content="Progetti · Pablo Dev">
+    <meta property="og:type" content="website">
+    <!-- <link rel="stylesheet" href="/assets/vendor/katex/katex.min.css"> -->
+    <link rel="stylesheet" href="/assets/css/helper-class.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+    /* .projects-page__eyebrow {color: var(--accent);font-size: 0.85rem;letter-spacing: 0.12em;} */
+
+    .projects-page__lead {color: var(--text-muted);font-size: 1.35rem;}
+    .projects-list {display: grid;gap:2rem;grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));}
+    .project-card {padding:1rem;background:hsl(0, 0%, 12%);}
+    .project-card:last-child {padding-bottom: 0;border-bottom: 0;}
+    .project-card__image-link {display: block;}
+    .project-card__image-link:hover,.project-card__image-link:focus-visible {text-decoration: none;}
+    .project-card__image {display: block;height:220px;width:auto;border: 1px solid var(--border);margin-inline:auto;}
+    .project-card h3 {margin-top: 1.4rem;border-top: 0;padding-top: 0;text-align:center;}
+    .project-card__tagline {color: var(--text-muted);font-size: 1.1rem;margin-top: -0.35rem;}
+    .project-card hr {border: 0;border-top: 1px solid var(--border);margin: 1.25rem 0;}
+</style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="wrap-wide">
+            <a class="site-brand" href="/index.html">Pablo Dev</a>
+            <button class="nav-toggle" type="button" aria-label="Apri il menu" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <nav class="site-nav" id="site-nav">
+                <a href="/servizi-web.html">Servizi Web</a>
+                <a href="/servizi-ai.html">Servizi AI</a>
+                <a href="/blog.html">Blog</a>
+                <a href="/progetti.html">Progetti</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="projects-page wrap-wide">
+    <!-- <p class="projects-page__eyebrow text-uppercase fw-semibold mb-2">Progetti</p> -->
+    <h1>Progetti</h1>
+    <p class="projects-page__lead">Casi Studio e Soluzioni Software</p>
+
+    <div class="projects-list mt-5">
+                    <article class="project-card">
+                <a class="project-card__image-link" href="https://zampgui.pubcloud.net/" target="_blank" rel="noopener noreferrer">
+                    <img class="project-card__image" src="/assets/images/zampgui_screen.webp" alt="Screenshot di ZAMPGUI" loading="lazy">
+                </a>
+                <h3>
+                    <a href="https://zampgui.pubcloud.net/" target="_blank" rel="noopener noreferrer">
+                        ZAMPGUI                    </a>
+                </h3>
+                <p class="project-card__tagline">Apache PHP e MariaDB per Windows 11</p>
+                <hr>
+                <p>Ambiente di sviluppo portabile per Windows con Apache, PHP e MariaDB, completo di phpMyAdmin, Xdebug, Git, Node.js, Dart Sass e WP-CLI.</p>
+            </article>
+                    <article class="project-card">
+                <a class="project-card__image-link" href="https://zamplite.pubcloud.net/" target="_blank" rel="noopener noreferrer">
+                    <img class="project-card__image" src="/assets/images/zamplite_screen.webp" alt="Screenshot di ZampLite" loading="lazy">
+                </a>
+                <h3>
+                    <a href="https://zamplite.pubcloud.net/" target="_blank" rel="noopener noreferrer">
+                        ZampLite                    </a>
+                </h3>
+                <p class="project-card__tagline">Portable WAMP Manager per Windows</p>
+                <hr>
+                <p>Manager WAMP portabile per gestire server PHP e MariaDB locali tramite interfaccia grafica, senza installazioni globali o servizi di sistema.</p>
+            </article>
+                    <article class="project-card">
+                <a class="project-card__image-link" href="https://sourceforge.net/projects/pixogui/" target="_blank" rel="noopener noreferrer">
+                    <img class="project-card__image" src="/assets/images/pixogui_screen.jpg" alt="Screenshot di PixoGUI" loading="lazy">
+                </a>
+                <h3>
+                    <a href="https://sourceforge.net/projects/pixogui/" target="_blank" rel="noopener noreferrer">
+                        PixoGUI                    </a>
+                </h3>
+                <p class="project-card__tagline">Image Converter per Windows 11</p>
+                <hr>
+                <p>Utility per convertire immagini in diversi formati, tra cui JPEG/JPG, PNG, WebP, AVIF, GIF, TIFF e ICO.</p>
+            </article>
+                    <article class="project-card">
+                <a class="project-card__image-link" href="https://html.pubcloud.net/" target="_blank" rel="noopener noreferrer">
+                    <img class="project-card__image" src="/assets/images/pagine_html.webp" alt="Screenshot di Pagine Html Utility" loading="lazy">
+                </a>
+                <h3>
+                    <a href="https://html.pubcloud.net/" target="_blank" rel="noopener noreferrer">
+                        Pagine Html Utility                    </a>
+                </h3>
+                <p class="project-card__tagline">Utilità generiche</p>
+                <hr>
+                <p>Raccolta di pagine HTML utili per comprimere CSS, formattare stringhe SQL, generare stringhe casuali e sostituire entità.</p>
+            </article>
+            </div>
+</section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap-wide">
+            <p class="text-center">&copy; 2026 Pablo Dev</p>
+        </div>
+    </footer>
+
+    <!-- <script src="/assets/vendor/katex/katex.min.js" defer></script> -->
+    <script src="/assets/js/main.js" defer></script>
+    </body>
+</html>

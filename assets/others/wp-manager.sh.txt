@@ -1,0 +1,981 @@
+#!/bin/bash
+# wp-manager.sh - Gestione istanze WordPress
+#
+# Uso guidato (senza parametri):
+#   wp-manager.sh
+#
+# Uso diretto:
+#   wp-manager.sh create  <nome>
+#   wp-manager.sh delete  <nome>
+#   wp-manager.sh backup  <nome>
+#   wp-manager.sh restore <nome>
+#   wp-manager.sh list
+
+# ===========================================================================
+# CONFIGURAZIONE
+# ===========================================================================
+
+# Distribuzione Linux: "rhel" oppure "debian"
+DISTRO="rhel"
+
+# Porta Apache (80 per standard, altra porta per sviluppo locale)
+APACHE_PORT="13980"
+
+# Root per siti localhost
+LOCALHOST_ROOT="/var/www/html"
+
+# Root per virtual host con dominio (senza slash finale)
+VHOST_ROOT="/var/www"
+
+# Dominio base per i virtual host.
+# Se VHOST_DOMAIN="casa.miodominio.com" e il nome istanza è "sito1",
+# il dominio completo sarà: sito1.casa.miodominio.com
+VHOST_DOMAIN="casa.porkost.xyz"
+
+# Cartella dove vengono salvati tutti i backup (owner: utente corrente)
+BACKUP_DIR="$HOME/wpbackup_bzip2"
+
+# Credenziali MariaDB
+DB_ROOT_PASSWORD="root"
+
+# Versioni WordPress disponibili (oltre a "latest" che è sempre la default).
+# Formato: solo il numero di versione, es. "6.9.4"
+WP_VERSIONS=("6.9.4" "6.8.2" "6.7.2" "6.6.2" "6.5.5")
+
+# ===========================================================================
+# VARIABILI DERIVATE (non modificare)
+# ===========================================================================
+
+case "$DISTRO" in
+    rhel)
+        APACHE_USER="apache"
+        APACHE_SERVICE="httpd"
+        VHOST_CONF_DIR="/etc/httpd/conf.d"
+        ;;
+    debian)
+        APACHE_USER="www-data"
+        APACHE_SERVICE="apache2"
+        VHOST_CONF_DIR="/etc/apache2/sites-available"
+        ;;
+    *)
+        echo "Errore: DISTRO deve essere 'rhel' oppure 'debian'."
+        exit 1
+        ;;
+esac
+
+# Crea le cartelle necessarie se non esistono (owner: utente corrente, non root)
+WP_DOWNLOAD_DIR="${BACKUP_DIR}/wp_official_release_zip"
+for _DIR in "$BACKUP_DIR" "$WP_DOWNLOAD_DIR"; do
+    if [ ! -d "$_DIR" ]; then
+        mkdir -p "$_DIR"
+        echo "Cartella creata: $_DIR"
+    fi
+done
+unset _DIR
+
+# ===========================================================================
+# FUNZIONI DI UTILITÀ
+# ===========================================================================
+
+# ---------------------------------------------------------------------------
+# Validazione nome sito
+# Regole: solo lettere, cifre e underscore; non inizia con cifra; non vuoto
+# ---------------------------------------------------------------------------
+validate_site_name() {
+    local NAME="$1"
+    if [ -z "$NAME" ]; then
+        echo "Errore: il nome del sito non può essere vuoto."
+        return 1
+    fi
+    if [[ "$NAME" =~ ^[0-9] ]]; then
+        echo "Errore: il nome del sito non può iniziare con un numero."
+        return 1
+    fi
+    if [[ ! "$NAME" =~ ^[a-zA-Z0-9_]+$ ]]; then
+        echo "Errore: il nome del sito può contenere solo lettere, cifre e underscore."
+        return 1
+    fi
+    return 0
+}
+
+# ---------------------------------------------------------------------------
+# Menu interattivo per scegliere un sito esistente tra quelli installati.
+# Imposta la variabile globale SITE_NAME con il nome (solo nome, senza dominio).
+# Parametro opzionale $1: etichetta da mostrare nel prompt (es. "eliminare").
+# Ritorna 1 se non ci sono siti installati.
+# ---------------------------------------------------------------------------
+pick_existing_site() {
+    local ACTION_LABEL="${1:-selezionare}"
+
+    # Raccogli tutti i siti installati in due array paralleli:
+    #   SITE_PICK_NAMES  → nome breve (quello da passare alle funzioni)
+    #   SITE_PICK_LABELS → riga descrittiva da mostrare all'utente
+    local -a SITE_PICK_NAMES=()
+    local -a SITE_PICK_LABELS=()
+
+    # Siti localhost
+    for DIR in "${LOCALHOST_ROOT}"/*/; do
+        if [ -f "${DIR}wp-config.php" ]; then
+            local N
+            N=$(basename "$DIR")
+            local U
+            if [ "$APACHE_PORT" = "80" ]; then
+                U="http://localhost/${N}"
+            else
+                U="http://localhost:${APACHE_PORT}/${N}"
+            fi
+            SITE_PICK_NAMES+=("$N")
+            SITE_PICK_LABELS+=("${N}  [localhost]  ${U}")
+        fi
+    done
+
+    # Siti vhost
+    for DIR in "${VHOST_ROOT}"/*/; do
+        [ "$(basename "$DIR")" = "html" ] && continue
+        if [ -f "${DIR}wp-config.php" ]; then
+            local N
+            N=$(basename "$DIR")          # es. sito1.casa.miodominio.com
+            # Il "nome" da passare alle funzioni è solo la prima parte
+            local SHORT_NAME
+            SHORT_NAME=$(echo "$N" | cut -d. -f1)
+            local U
+            if [ "$APACHE_PORT" = "80" ]; then
+                U="http://${N}"
+            else
+                U="http://${N}:${APACHE_PORT}"
+            fi
+            SITE_PICK_NAMES+=("$SHORT_NAME")
+            SITE_PICK_LABELS+=("${SHORT_NAME}  [vhost: ${N}]  ${U}")
+        fi
+    done
+
+    if [ ${#SITE_PICK_NAMES[@]} -eq 0 ]; then
+        echo "Nessuna istanza WordPress installata."
+        return 1
+    fi
+
+    echo ""
+    echo "Istanze disponibili:"
+    for i in "${!SITE_PICK_LABELS[@]}"; do
+        echo "  $((i+1))) ${SITE_PICK_LABELS[$i]}"
+    done
+    echo ""
+
+    local SCELTA
+    read -p "Quale istanza vuoi ${ACTION_LABEL}? [1-${#SITE_PICK_NAMES[@]}]: " SCELTA
+
+    if ! [[ "$SCELTA" =~ ^[0-9]+$ ]] || \
+       [ "$SCELTA" -lt 1 ] || \
+       [ "$SCELTA" -gt "${#SITE_PICK_NAMES[@]}" ]; then
+        echo "Scelta non valida. Operazione annullata."
+        exit 1
+    fi
+
+    SITE_NAME="${SITE_PICK_NAMES[$((SCELTA-1))]}"
+    echo "  -> Istanza selezionata: $SITE_NAME"
+}
+
+# ---------------------------------------------------------------------------
+# Menu interattivo per scegliere un backup esistente in BACKUP_DIR.
+# Scansiona i file <nome>-vhost-*.tar.bz2 e <nome>-local-*.tar.bz2.
+# Imposta le variabili globali: SITE_NAME, BACKUP_FILE.
+# Ritorna 1 se non ci sono backup disponibili.
+# ---------------------------------------------------------------------------
+pick_backup() {
+    local -a BACKUP_FILES=()
+    local -a BACKUP_LABELS=()
+
+    mapfile -t BACKUP_FILES < <(ls -1 "${BACKUP_DIR}"/*.tar.bz2 2>/dev/null | sort)
+
+    if [ ${#BACKUP_FILES[@]} -eq 0 ]; then
+        echo "Nessun backup trovato in ${BACKUP_DIR}."
+        return 1
+    fi
+
+    echo ""
+    echo "Backup disponibili in ${BACKUP_DIR}:"
+    for i in "${!BACKUP_FILES[@]}"; do
+        local FNAME
+        FNAME=$(basename "${BACKUP_FILES[$i]}")
+        # Formato: <nome>-vhost-YYYYMMDD-HHMMSS.tar.bz2
+        #       o: <nome>-local-YYYYMMDD-HHMMSS.tar.bz2
+        local BNAME BTYPE BDATE BTIME
+        BNAME=$(echo "$FNAME" | cut -d- -f1)
+        BTYPE=$(echo "$FNAME" | cut -d- -f2)
+        BDATE=$(echo "$FNAME" | cut -d- -f3)
+        BTIME=$(echo "$FNAME" | cut -d- -f4 | cut -d. -f1)
+        local LABEL_TYPE
+        if [ "$BTYPE" = "vhost" ]; then
+            LABEL_TYPE="vhost: ${BNAME}.${VHOST_DOMAIN}"
+        else
+            LABEL_TYPE="localhost"
+        fi
+        BACKUP_LABELS+=("${BNAME}  [${LABEL_TYPE}]  ${BDATE:0:4}-${BDATE:4:2}-${BDATE:6:2} ${BTIME:0:2}:${BTIME:2:2}:${BTIME:4:2}")
+        echo "  $((i+1))) ${BACKUP_LABELS[$i]}"
+    done
+    echo ""
+
+    local SCELTA
+    read -p "Quale backup vuoi ripristinare? [1-${#BACKUP_FILES[@]}]: " SCELTA
+
+    if ! [[ "$SCELTA" =~ ^[0-9]+$ ]] || \
+       [ "$SCELTA" -lt 1 ] || \
+       [ "$SCELTA" -gt "${#BACKUP_FILES[@]}" ]; then
+        echo "Scelta non valida. Operazione annullata."
+        exit 1
+    fi
+
+    BACKUP_FILE="${BACKUP_FILES[$((SCELTA-1))]}"
+    local FNAME
+    FNAME=$(basename "$BACKUP_FILE")
+    SITE_NAME=$(echo "$FNAME" | cut -d- -f1)
+    echo "  -> Backup selezionato: $FNAME  (sito: $SITE_NAME)"
+}
+
+# ---------------------------------------------------------------------------
+# Ricava il percorso e l'URL del sito in base alla modalità
+# Imposta le variabili globali: SITE_DIR, SITE_URL, FULL_DOMAIN, IS_VHOST
+# ---------------------------------------------------------------------------
+resolve_site_paths() {
+    local SITE="$1"
+    local MODE="$2"   # "localhost" oppure "vhost"
+
+    if [ "$MODE" = "vhost" ]; then
+        IS_VHOST=1
+        FULL_DOMAIN="${SITE}.${VHOST_DOMAIN}"
+        SITE_DIR="${VHOST_ROOT}/${FULL_DOMAIN}"
+        if [ "$APACHE_PORT" = "80" ]; then
+            SITE_URL="http://${FULL_DOMAIN}"
+        else
+            SITE_URL="http://${FULL_DOMAIN}:${APACHE_PORT}"
+        fi
+    else
+        IS_VHOST=0
+        FULL_DOMAIN="localhost"
+        SITE_DIR="${LOCALHOST_ROOT}/${SITE}"
+        if [ "$APACHE_PORT" = "80" ]; then
+            SITE_URL="http://localhost/${SITE}"
+        else
+            SITE_URL="http://localhost:${APACHE_PORT}/${SITE}"
+        fi
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Scelta interattiva della versione WordPress
+# Imposta la variabile globale: WP_VERSION (stringa) e WP_URL (URL archivio)
+# ---------------------------------------------------------------------------
+choose_wp_version() {
+    echo ""
+    echo "Versioni WordPress disponibili:"
+    echo "  0) latest (default)"
+    for i in "${!WP_VERSIONS[@]}"; do
+        echo "  $((i+1))) ${WP_VERSIONS[$i]}"
+    done
+    echo ""
+    read -p "Quale versione vuoi installare? [0-${#WP_VERSIONS[@]}, default=0]: " VER_SCELTA
+
+    if [ -z "$VER_SCELTA" ] || [ "$VER_SCELTA" = "0" ]; then
+        WP_VERSION="latest"
+        WP_URL="https://wordpress.org/latest.tar.gz"
+        WP_ARCHIVE="latest.tar.gz"
+    else
+        if ! [[ "$VER_SCELTA" =~ ^[0-9]+$ ]] || \
+           [ "$VER_SCELTA" -lt 1 ] || \
+           [ "$VER_SCELTA" -gt "${#WP_VERSIONS[@]}" ]; then
+            echo "Scelta non valida. Verrà usata la versione latest."
+            WP_VERSION="latest"
+            WP_URL="https://wordpress.org/latest.tar.gz"
+            WP_ARCHIVE="latest.tar.gz"
+        else
+            WP_VERSION="${WP_VERSIONS[$((VER_SCELTA-1))]}"
+            WP_URL="https://wordpress.org/wordpress-${WP_VERSION}.zip"
+            WP_ARCHIVE="wordpress-${WP_VERSION}.zip"
+        fi
+    fi
+    echo "  -> Versione selezionata: $WP_VERSION"
+}
+
+# ---------------------------------------------------------------------------
+# Applica i permessi corretti alla cartella del sito
+# ---------------------------------------------------------------------------
+set_permissions() {
+    local DIR="$1"
+    local MODE="$2"   # "localhost" oppure "vhost"
+
+    if [ "$MODE" = "vhost" ]; then
+        sudo chown -R "${APACHE_USER}:${APACHE_USER}" "$DIR"
+        sudo find "$DIR" -type d -exec chmod 775 {} \;
+        sudo find "$DIR" -type f -exec chmod 664 {} \;
+    else
+        sudo chown -R "${APACHE_USER}:${APACHE_USER}" "$DIR"
+        sudo chmod -R 775 "$DIR"
+        sudo find "$DIR" -type d -exec chmod g+s {} \;
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Crea il file VirtualHost e (re)avvia Apache
+# ---------------------------------------------------------------------------
+create_vhost_conf() {
+    local DOMAIN="$1"
+    local DIR="$2"
+    local LOG_BASE
+    LOG_BASE=$(echo "$DOMAIN" | cut -d. -f1)
+    local CONF_FILE="${VHOST_CONF_DIR}/${DOMAIN}.conf"
+
+    echo ">>> Creazione VirtualHost ${CONF_FILE}..."
+    sudo tee "$CONF_FILE" > /dev/null <<EOF
+<VirtualHost *:${APACHE_PORT}>
+    ServerName ${DOMAIN}
+    DocumentRoot ${DIR}
+    <Directory ${DIR}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    ErrorLog /var/log/${APACHE_SERVICE}/${LOG_BASE}-error.log
+    CustomLog /var/log/${APACHE_SERVICE}/${LOG_BASE}-access.log combined
+</VirtualHost>
+EOF
+
+    # Su Debian/Ubuntu occorre abilitare il sito
+    if [ "$DISTRO" = "debian" ]; then
+        sudo a2ensite "${DOMAIN}.conf"
+    fi
+
+    echo ">>> Riavvio ${APACHE_SERVICE}..."
+    sudo systemctl restart "$APACHE_SERVICE"
+}
+
+# ---------------------------------------------------------------------------
+# Rimuove il file VirtualHost e (re)avvia Apache
+# ---------------------------------------------------------------------------
+remove_vhost_conf() {
+    local DOMAIN="$1"
+    local CONF_FILE="${VHOST_CONF_DIR}/${DOMAIN}.conf"
+
+    if [ -f "$CONF_FILE" ]; then
+        echo ">>> Rimozione VirtualHost ${CONF_FILE}..."
+        if [ "$DISTRO" = "debian" ]; then
+            sudo a2dissite "${DOMAIN}.conf"
+        fi
+        sudo rm -f "$CONF_FILE"
+        echo ">>> Riavvio ${APACHE_SERVICE}..."
+        sudo systemctl restart "$APACHE_SERVICE"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Scarica WordPress in WP_DOWNLOAD_DIR ed estrae in una tmp dir.
+# Restituisce il percorso della cartella estratta in WP_EXTRACTED_DIR.
+# ---------------------------------------------------------------------------
+download_and_extract_wp() {
+    local ARCHIVE_PATH="${WP_DOWNLOAD_DIR}/${WP_ARCHIVE}"
+
+    # Download nella cartella centralizzata (owner: utente corrente)
+    if [ -f "$ARCHIVE_PATH" ]; then
+        read -p "Il file $WP_ARCHIVE esiste già. Vuoi riscaricarlo? [s/N] " risposta
+        if [ "$risposta" = "s" ] || [ "$risposta" = "S" ]; then
+            rm -f "$ARCHIVE_PATH"
+            wget -q "$WP_URL" -O "$ARCHIVE_PATH"
+        fi
+    else
+        wget -q "$WP_URL" -O "$ARCHIVE_PATH"
+    fi
+
+    # Estrazione in una directory temporanea
+    local TMP_EXTRACT
+    TMP_EXTRACT=$(mktemp -d)
+
+    if [ "$WP_VERSION" = "latest" ]; then
+        sudo tar -xzf "$ARCHIVE_PATH" -C "$TMP_EXTRACT"
+    else
+        sudo unzip -q "$ARCHIVE_PATH" -d "$TMP_EXTRACT"
+    fi
+
+    WP_EXTRACTED_DIR="${TMP_EXTRACT}/wordpress"
+    # Salva il riferimento alla tmp per poterla pulire dopo il mv
+    WP_EXTRACT_TMP="$TMP_EXTRACT"
+}
+
+# ---------------------------------------------------------------------------
+# Configura wp-config.php (chiavi salt, db, costanti extra)
+# ---------------------------------------------------------------------------
+configure_wp_config() {
+    local DIR="$1"
+    local DB="$2"
+
+    sudo cp "$DIR/wp-config-sample.php" "$DIR/wp-config.php"
+    sudo sed -i "s/database_name_here/$DB/"             "$DIR/wp-config.php"
+    sudo sed -i "s/username_here/root/"                 "$DIR/wp-config.php"
+    sudo sed -i "s/password_here/$DB_ROOT_PASSWORD/"    "$DIR/wp-config.php"
+
+    # Sostituzione chiavi salt
+    NEW_KEYS=$(curl -s https://api.wordpress.org/secret-key/1.1/salt)
+    FIRST_LINE=$(grep -n "define( 'AUTH_KEY'"   "$DIR/wp-config.php" | head -1 | cut -d: -f1)
+    LAST_LINE=$(grep  -n "define( 'NONCE_SALT'" "$DIR/wp-config.php" | head -1 | cut -d: -f1)
+    sudo sed -i "${FIRST_LINE},${LAST_LINE}d" "$DIR/wp-config.php"
+    sudo sed -i "$((FIRST_LINE - 1))r /dev/stdin" "$DIR/wp-config.php" <<< "$NEW_KEYS"
+
+    # Costanti extra dopo WP_DEBUG
+    EXTRA_DEFINES="define( 'WP_POST_REVISIONS', 5 );\ndefine( 'WP_AUTO_UPDATE_CORE', false );\ndefine( 'ALLOW_UNFILTERED_UPLOADS', true );"
+    sudo sed -i "/define( 'WP_DEBUG', false );/a ${EXTRA_DEFINES}" "$DIR/wp-config.php"
+}
+
+# ===========================================================================
+# MODALITÀ GUIDATA (nessun argomento)
+# ===========================================================================
+interactive_mode() {
+    echo "======================================"
+    echo "  wp-manager.sh  -  Modalità guidata"
+    echo "======================================"
+    echo ""
+    echo "Cosa vuoi fare?"
+    echo "  1) create   - Installa una nuova istanza WordPress"
+    echo "  2) delete   - Elimina un'istanza esistente"
+    echo "  3) backup   - Crea un backup di un'istanza"
+    echo "  4) restore  - Ripristina un'istanza da backup"
+    echo "  5) list     - Elenca le istanze installate"
+    echo ""
+    read -p "Scelta [1-5]: " SCELTA_OP
+
+    case "$SCELTA_OP" in
+        1) OP="create"  ;;
+        2) OP="delete"  ;;
+        3) OP="backup"  ;;
+        4) OP="restore" ;;
+        5) OP="list"    ;;
+        *)
+            echo "Scelta non valida. Uscita."
+            exit 1
+            ;;
+    esac
+
+    if [ "$OP" = "create" ]; then
+        echo ""
+        read -p "Nome della nuova istanza WordPress: " SITE_NAME
+        if ! validate_site_name "$SITE_NAME"; then
+            exit 1
+        fi
+    elif [ "$OP" = "restore" ]; then
+        if ! pick_backup; then
+            exit 1
+        fi
+        # SITE_NAME e BACKUP_FILE sono già impostati da pick_backup
+    elif [ "$OP" != "list" ]; then
+        if ! pick_existing_site "$OP"; then
+            exit 1
+        fi
+    fi
+
+    # Per create, chiedi anche modalità (localhost / vhost)
+    if [ "$OP" = "create" ]; then
+        echo ""
+        echo "Tipo di installazione:"
+        echo "  1) localhost  (http://localhost:${APACHE_PORT}/${SITE_NAME})"
+        echo "  2) vhost      (http://${SITE_NAME}.${VHOST_DOMAIN})"
+        read -p "Scelta [1-2, default=1]: " SCELTA_TIPO
+        case "$SCELTA_TIPO" in
+            2) INSTALL_MODE="vhost" ;;
+            *) INSTALL_MODE="localhost" ;;
+        esac
+        choose_wp_version
+    fi
+
+    # Esegui l'operazione raccolta
+    case "$OP" in
+        create)  create_wp  "$SITE_NAME" "$INSTALL_MODE" ;;
+        delete)  delete_wp  "$SITE_NAME" ;;
+        backup)  backup_wp  "$SITE_NAME" ;;
+        restore) restore_wp "$SITE_NAME" ;;
+        list)    list_wp ;;
+    esac
+}
+
+# ===========================================================================
+# create
+# ===========================================================================
+create_wp() {
+    local SITE="$1"
+    local MODE="${2:-localhost}"   # default: localhost
+
+    if [ -z "$SITE" ]; then
+        echo "Uso: wp-manager.sh create <nome> [localhost|vhost]"
+        exit 1
+    fi
+    if ! validate_site_name "$SITE"; then
+        exit 1
+    fi
+
+    resolve_site_paths "$SITE" "$MODE"
+
+    # Se WP_VERSION non è ancora impostata (invocazione diretta), chiedi
+    if [ -z "$WP_VERSION" ]; then
+        choose_wp_version
+    fi
+
+    DB_NAME="wp_${SITE}"
+
+    if [ -d "$SITE_DIR" ]; then
+        echo "Errore: la cartella $SITE_DIR esiste già."
+        exit 1
+    fi
+
+    echo ""
+    echo "=== Riepilogo creazione ==="
+    echo "  Nome       : $SITE"
+    echo "  Modalità   : $MODE"
+    echo "  Cartella   : $SITE_DIR"
+    echo "  Database   : $DB_NAME"
+    echo "  URL        : $SITE_URL"
+    echo "  WP versione: $WP_VERSION"
+    if [ "$IS_VHOST" = "1" ]; then
+        echo "  VirtualHost: ${VHOST_CONF_DIR}/${FULL_DOMAIN}.conf"
+    fi
+    echo ""
+
+    # --- Database ---
+    echo ">>> Creazione database '$DB_NAME'..."
+    sudo mariadb -u root -p"$DB_ROOT_PASSWORD" -e "
+        DROP DATABASE IF EXISTS \`$DB_NAME\`;
+        CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    "
+
+    # --- Download e installazione ---
+    echo ">>> Download WordPress $WP_VERSION..."
+    download_and_extract_wp
+    sudo mv "$WP_EXTRACTED_DIR" "$SITE_DIR"
+    rm -rf "$WP_EXTRACT_TMP"
+
+    # --- Configurazione ---
+    echo ">>> Configurazione wp-config.php..."
+    configure_wp_config "$SITE_DIR" "$DB_NAME"
+
+    # --- Permessi ---
+    echo ">>> Permessi..."
+    set_permissions "$SITE_DIR" "$MODE"
+
+    # --- VirtualHost (solo vhost) ---
+    if [ "$IS_VHOST" = "1" ]; then
+        create_vhost_conf "$FULL_DOMAIN" "$SITE_DIR"
+    fi
+
+    echo ""
+    echo "=== WordPress installato! ==="
+    echo "  Cartella   : $SITE_DIR"
+    echo "  Database   : $DB_NAME"
+    echo "  URL        : $SITE_URL"
+}
+
+# ===========================================================================
+# delete
+# ===========================================================================
+delete_wp() {
+    local SITE="$1"
+
+    if [ -z "$SITE" ]; then
+        echo "Uso: wp-manager.sh delete <nome>"
+        exit 1
+    fi
+
+    DB_NAME="wp_${SITE}"
+
+    # Cerca il sito: prima come vhost, poi come localhost
+    SITE_DIR_VHOST="${VHOST_ROOT}/${SITE}.${VHOST_DOMAIN}"
+    SITE_DIR_LOCAL="${LOCALHOST_ROOT}/${SITE}"
+
+    if [ -d "$SITE_DIR_VHOST" ]; then
+        SITE_DIR="$SITE_DIR_VHOST"
+        IS_VHOST=1
+        FULL_DOMAIN="${SITE}.${VHOST_DOMAIN}"
+    elif [ -d "$SITE_DIR_LOCAL" ]; then
+        SITE_DIR="$SITE_DIR_LOCAL"
+        IS_VHOST=0
+    else
+        echo "Errore: nessuna cartella trovata per '$SITE' (cercato in $SITE_DIR_VHOST e $SITE_DIR_LOCAL)."
+        exit 1
+    fi
+
+    echo "Sito trovato: $SITE_DIR"
+    read -p "Sei sicuro di voler eliminare '$SITE' (cartella + database '$DB_NAME')? (s/N): " CONFIRM
+    if [[ "$CONFIRM" != "s" && "$CONFIRM" != "S" ]]; then
+        echo "Operazione annullata."
+        exit 0
+    fi
+
+    echo ">>> Rimozione cartella..."
+    sudo rm -rf "$SITE_DIR"
+
+    echo ">>> Rimozione database '$DB_NAME'..."
+    sudo mariadb -u root -p"$DB_ROOT_PASSWORD" -e "
+        DROP DATABASE IF EXISTS \`$DB_NAME\`;
+    "
+
+    # Rimuovi VirtualHost se presente
+    if [ "${IS_VHOST:-0}" = "1" ]; then
+        remove_vhost_conf "$FULL_DOMAIN"
+    fi
+
+    echo "=== Istanza '$SITE' eliminata. ==="
+}
+
+# ===========================================================================
+# backup
+# Crea: $BACKUP_DIR/<nome>-vhost-YYYYMMDD-HHMMSS.tar.bz2
+#    o: $BACKUP_DIR/<nome>-local-YYYYMMDD-HHMMSS.tar.bz2
+# L'archivio contiene la cartella del sito e il dump SQL (<nome>.sql)
+# Owner del file: utente corrente (non root)
+# ===========================================================================
+backup_wp() {
+    local SITE="$1"
+
+    if [ -z "$SITE" ]; then
+        echo "Uso: wp-manager.sh backup <nome>"
+        exit 1
+    fi
+
+    DB_NAME="wp_${SITE}"
+
+    # Individua la cartella sorgente
+    SITE_DIR_VHOST="${VHOST_ROOT}/${SITE}.${VHOST_DOMAIN}"
+    SITE_DIR_LOCAL="${LOCALHOST_ROOT}/${SITE}"
+
+    local BACKUP_TYPE BACKUP_SITE_NAME
+    if [ -d "$SITE_DIR_VHOST" ]; then
+        SITE_DIR="$SITE_DIR_VHOST"
+        IS_VHOST=1
+        BACKUP_TYPE="vhost"
+        BACKUP_SITE_NAME="${SITE}.${VHOST_DOMAIN}"
+    elif [ -d "$SITE_DIR_LOCAL" ]; then
+        SITE_DIR="$SITE_DIR_LOCAL"
+        IS_VHOST=0
+        BACKUP_TYPE="local"
+        BACKUP_SITE_NAME="$SITE"
+    else
+        echo "Errore: nessuna cartella trovata per '$SITE'."
+        exit 1
+    fi
+
+    TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+    BACKUP_FILE="${BACKUP_DIR}/${SITE}-${BACKUP_TYPE}-${TIMESTAMP}.tar.bz2"
+    TMP_DIR=$(mktemp -d)
+
+    echo ">>> Dump del database '$DB_NAME'..."
+    sudo mariadb-dump -u root -p"$DB_ROOT_PASSWORD" \
+        --single-transaction --routines --triggers \
+        "$DB_NAME" > "$TMP_DIR/${SITE}.sql"
+
+    if [ $? -ne 0 ]; then
+        echo "Errore durante il dump del database."
+        rm -rf "$TMP_DIR"
+        exit 1
+    fi
+
+    echo ">>> Creazione archivio $BACKUP_FILE ..."
+    sudo tar -cjf "$BACKUP_FILE" \
+        -C "$(dirname "$SITE_DIR")" "$BACKUP_SITE_NAME" \
+        -C "$TMP_DIR"              "${SITE}.sql"
+
+    if [ $? -ne 0 ]; then
+        echo "Errore durante la creazione dell'archivio."
+        rm -rf "$TMP_DIR"
+        exit 1
+    fi
+
+    # Restituisce l'ownership del file all'utente corrente (non root)
+    sudo chown "${USER}:${USER}" "$BACKUP_FILE"
+
+    rm -rf "$TMP_DIR"
+
+    echo ""
+    echo "=== Backup completato! ==="
+    echo "  File    : $BACKUP_FILE"
+    echo "  Sito    : $SITE_DIR"
+    echo "  Database: $DB_NAME"
+}
+
+# ===========================================================================
+# restore
+# Legge i backup da $BACKUP_DIR.
+# Il tipo (localhost/vhost) viene ricavato dal nome file:
+#   <nome>-vhost-YYYYMMDD-HHMMSS.tar.bz2
+#   <nome>-local-YYYYMMDD-HHMMSS.tar.bz2
+# Se BACKUP_FILE è già impostato (da pick_backup) lo usa direttamente,
+# altrimenti cerca tutti i backup per il sito $SITE e mostra un menu.
+# ===========================================================================
+restore_wp() {
+    local SITE="$1"
+
+    if [ -z "$SITE" ]; then
+        echo "Uso: wp-manager.sh restore <nome>"
+        exit 1
+    fi
+
+    DB_NAME="wp_${SITE}"
+
+    # Se BACKUP_FILE non è già stato scelto da pick_backup, mostra il menu
+    # filtrato per questo sito specifico
+    if [ -z "$BACKUP_FILE" ]; then
+        mapfile -t BACKUPS < <(ls -1 "${BACKUP_DIR}/${SITE}-"*.tar.bz2 2>/dev/null | sort)
+
+        if [ ${#BACKUPS[@]} -eq 0 ]; then
+            echo "Errore: nessun file di backup trovato per il sito '$SITE' in ${BACKUP_DIR}."
+            echo "  (formato atteso: ${SITE}-vhost-YYYYMMDD-HHMMSS.tar.bz2)"
+            exit 1
+        fi
+
+        if [ ${#BACKUPS[@]} -eq 1 ]; then
+            BACKUP_FILE="${BACKUPS[0]}"
+            echo "Backup trovato: $(basename "$BACKUP_FILE")"
+        else
+            echo "Backup disponibili per '$SITE':"
+            for i in "${!BACKUPS[@]}"; do
+                local FNAME BTYPE BDATE BTIME
+                FNAME=$(basename "${BACKUPS[$i]}")
+                BTYPE=$(echo "$FNAME" | cut -d- -f2)
+                BDATE=$(echo "$FNAME" | cut -d- -f3)
+                BTIME=$(echo "$FNAME" | cut -d- -f4 | cut -d. -f1)
+                local LABEL_TYPE
+                [ "$BTYPE" = "vhost" ] && LABEL_TYPE="vhost" || LABEL_TYPE="localhost"
+                echo "  $((i+1))) ${FNAME}  [${LABEL_TYPE}]  ${BDATE:0:4}-${BDATE:4:2}-${BDATE:6:2} ${BTIME:0:2}:${BTIME:2:2}:${BTIME:4:2}"
+            done
+            local SCELTA
+            read -p "Quale vuoi ripristinare? [1-${#BACKUPS[@]}]: " SCELTA
+            if ! [[ "$SCELTA" =~ ^[0-9]+$ ]] || [ "$SCELTA" -lt 1 ] || [ "$SCELTA" -gt ${#BACKUPS[@]} ]; then
+                echo "Scelta non valida. Operazione annullata."
+                exit 1
+            fi
+            BACKUP_FILE="${BACKUPS[$((SCELTA-1))]}"
+        fi
+    fi
+
+    # Ricava il tipo dal nome del file di backup
+    local FNAME BTYPE
+    FNAME=$(basename "$BACKUP_FILE")
+    BTYPE=$(echo "$FNAME" | cut -d- -f2)
+
+    if [ "$BTYPE" = "vhost" ]; then
+        IS_VHOST=1
+        FULL_DOMAIN_EXTRACTED="${SITE}.${VHOST_DOMAIN}"
+        SITE_DIR="${VHOST_ROOT}/${FULL_DOMAIN_EXTRACTED}"
+        INSTALL_MODE="vhost"
+        if [ "$APACHE_PORT" = "80" ]; then
+            SITE_URL="http://${FULL_DOMAIN_EXTRACTED}"
+        else
+            SITE_URL="http://${FULL_DOMAIN_EXTRACTED}:${APACHE_PORT}"
+        fi
+    else
+        IS_VHOST=0
+        SITE_DIR="${LOCALHOST_ROOT}/${SITE}"
+        INSTALL_MODE="localhost"
+        if [ "$APACHE_PORT" = "80" ]; then
+            SITE_URL="http://localhost/${SITE}"
+        else
+            SITE_URL="http://localhost:${APACHE_PORT}/${SITE}"
+        fi
+    fi
+
+    # Conferma sovrascrittura se il sito esiste già
+    if [ -d "$SITE_DIR" ]; then
+        read -p "La cartella $SITE_DIR esiste già e verrà sovrascritta. Continuare? (s/N): " CONFIRM
+        if [[ "$CONFIRM" != "s" && "$CONFIRM" != "S" ]]; then
+            echo "Operazione annullata."
+            exit 0
+        fi
+        echo ">>> Rimozione cartella esistente..."
+        sudo rm -rf "$SITE_DIR"
+    fi
+
+    TMP_DIR=$(mktemp -d)
+
+    echo ">>> Estrazione archivio $BACKUP_FILE ..."
+    sudo tar -xjf "$BACKUP_FILE" -C "$TMP_DIR"
+    if [ $? -ne 0 ]; then
+        echo "Errore durante l'estrazione dell'archivio."
+        rm -rf "$TMP_DIR"
+        exit 1
+    fi
+
+    # Individua la cartella estratta (può essere <site> o <site>.<domain>)
+    local EXTRACTED_SITE_DIR
+    if [ -d "$TMP_DIR/${SITE}.${VHOST_DOMAIN}" ]; then
+        EXTRACTED_SITE_DIR="$TMP_DIR/${SITE}.${VHOST_DOMAIN}"
+    elif [ -d "$TMP_DIR/$SITE" ]; then
+        EXTRACTED_SITE_DIR="$TMP_DIR/$SITE"
+    else
+        echo "Errore: nessuna cartella sito trovata nell'archivio."
+        rm -rf "$TMP_DIR"
+        exit 1
+    fi
+
+    # Controlla dump SQL
+    local SQL_FILE="$TMP_DIR/${SITE}.sql"
+    if [ ! -f "$SQL_FILE" ]; then
+        echo "Errore: il file SQL '${SITE}.sql' non è presente nell'archivio."
+        rm -rf "$TMP_DIR"
+        exit 1
+    fi
+
+    sudo mv "$EXTRACTED_SITE_DIR" "$SITE_DIR"
+
+    echo ">>> Ripristino database '$DB_NAME'..."
+    sudo mariadb -u root -p"$DB_ROOT_PASSWORD" -e "
+        DROP DATABASE IF EXISTS \`$DB_NAME\`;
+        CREATE DATABASE \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    "
+    sudo mariadb -u root -p"$DB_ROOT_PASSWORD" "$DB_NAME" < "$SQL_FILE"
+    if [ $? -ne 0 ]; then
+        echo "Errore durante il ripristino del database."
+        rm -rf "$TMP_DIR"
+        exit 1
+    fi
+
+    rm -rf "$TMP_DIR"
+
+    # Aggiorna credenziali in wp-config.php
+    echo ">>> Aggiornamento credenziali in wp-config.php..."
+    sudo sed -i "s/define( 'DB_NAME',.*$/define( 'DB_NAME', '${DB_NAME}' );/"                  "$SITE_DIR/wp-config.php"
+    sudo sed -i "s/define( 'DB_USER',.*$/define( 'DB_USER', 'root' );/"                        "$SITE_DIR/wp-config.php"
+    sudo sed -i "s/define( 'DB_PASSWORD',.*$/define( 'DB_PASSWORD', '${DB_ROOT_PASSWORD}' );/" "$SITE_DIR/wp-config.php"
+
+    # Permessi
+    echo ">>> Permessi..."
+    set_permissions "$SITE_DIR" "$INSTALL_MODE"
+
+    # VirtualHost (se necessario)
+    if [ "$IS_VHOST" = "1" ]; then
+        create_vhost_conf "$FULL_DOMAIN_EXTRACTED" "$SITE_DIR"
+    fi
+
+    echo ""
+    echo "=== Restore completato! ==="
+    echo "  Sorgente : $BACKUP_FILE"
+    echo "  Cartella : $SITE_DIR"
+    echo "  Database : $DB_NAME"
+    echo "  URL      : $SITE_URL"
+}
+
+# ===========================================================================
+# list
+# Elenca sia i siti in LOCALHOST_ROOT che quelli in VHOST_ROOT
+# ===========================================================================
+list_wp() {
+    echo "=== Istanze WordPress ==="
+    echo ""
+    FOUND=0
+
+    # Siti localhost
+    for DIR in "${LOCALHOST_ROOT}"/*/; do
+        if [ -f "${DIR}wp-config.php" ]; then
+            FOUND=1
+            NAME=$(basename "$DIR")
+            DB=$(grep "DB_NAME" "${DIR}wp-config.php" | grep -o "'[^']*'" | sed -n '2p' | tr -d "'")
+            if [ "$APACHE_PORT" = "80" ]; then
+                URL="http://localhost/${NAME}"
+            else
+                URL="http://localhost:${APACHE_PORT}/${NAME}"
+            fi
+            echo "  [${NAME}]  (localhost)"
+            echo "    Cartella : $DIR"
+            echo "    Database : $DB"
+            echo "    URL      : $URL"
+            echo ""
+        fi
+    done
+
+    # Siti vhost (cartelle direttamente sotto VHOST_ROOT, esclusa html/)
+    for DIR in "${VHOST_ROOT}"/*/; do
+        [ "$(basename "$DIR")" = "html" ] && continue
+        if [ -f "${DIR}wp-config.php" ]; then
+            FOUND=1
+            NAME=$(basename "$DIR")
+            DB=$(grep "DB_NAME" "${DIR}wp-config.php" | grep -o "'[^']*'" | sed -n '2p' | tr -d "'")
+            if [ "$APACHE_PORT" = "80" ]; then
+                URL="http://${NAME}"
+            else
+                URL="http://${NAME}:${APACHE_PORT}"
+            fi
+            echo "  [${NAME}]  (vhost)"
+            echo "    Cartella : $DIR"
+            echo "    Database : $DB"
+            echo "    URL      : $URL"
+            if [ -f "${VHOST_CONF_DIR}/${NAME}.conf" ]; then
+                echo "    VirtualHost: ${VHOST_CONF_DIR}/${NAME}.conf"
+            fi
+            echo ""
+        fi
+    done
+
+    if [ $FOUND -eq 0 ]; then
+        echo "  Nessuna istanza trovata."
+    fi
+}
+
+# ===========================================================================
+# Entry point
+# ===========================================================================
+case "$1" in
+    "")
+        # Nessun argomento → modalità guidata
+        interactive_mode
+        ;;
+    create)
+        if [ -z "$2" ]; then
+            # Nome non specificato → chiedi interattivamente
+            read -p "Nome dell'istanza WordPress: " SITE_NAME
+            if ! validate_site_name "$SITE_NAME"; then exit 1; fi
+            echo ""
+            echo "Tipo di installazione:"
+            echo "  1) localhost  (http://localhost:${APACHE_PORT}/${SITE_NAME})"
+            echo "  2) vhost      (http://${SITE_NAME}.${VHOST_DOMAIN})"
+            read -p "Scelta [1-2, default=1]: " SCELTA_TIPO
+            case "$SCELTA_TIPO" in
+                2) INSTALL_MODE="vhost" ;;
+                *) INSTALL_MODE="localhost" ;;
+            esac
+            choose_wp_version
+            create_wp "$SITE_NAME" "$INSTALL_MODE"
+        else
+            MODE="${3:-localhost}"
+            choose_wp_version
+            create_wp "$2" "$MODE"
+        fi
+        ;;
+    delete)
+        if [ -z "$2" ]; then
+            if ! pick_existing_site "eliminare"; then exit 1; fi
+            delete_wp "$SITE_NAME"
+        else
+            delete_wp "$2"
+        fi
+        ;;
+    backup)
+        if [ -z "$2" ]; then
+            if ! pick_existing_site "fare il backup di"; then exit 1; fi
+            backup_wp "$SITE_NAME"
+        else
+            backup_wp "$2"
+        fi
+        ;;
+    restore)
+        if [ -z "$2" ]; then
+            if ! pick_backup; then exit 1; fi
+            restore_wp "$SITE_NAME"
+        else
+            restore_wp "$2"
+        fi
+        ;;
+    list)
+        list_wp
+        ;;
+    *)
+        echo "Uso:"
+        echo "  wp-manager.sh                          # modalità guidata interattiva"
+        echo "  wp-manager.sh create  <nome> [localhost|vhost]"
+        echo "  wp-manager.sh delete  <nome>"
+        echo "  wp-manager.sh backup  <nome>           # salva in $BACKUP_DIR"
+        echo "  wp-manager.sh restore [<nome>]         # ripristina da $BACKUP_DIR"
+        echo "  wp-manager.sh list"
+        ;;
+esac
