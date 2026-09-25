@@ -127,6 +127,23 @@ $articles = [
         'youtube_url' => 'https://youtu.be/NrMsr6bxyvs',
         'sn_frontpage' => 's',
     ],
+    [
+        'slug' => 'come-organizzare-turni-lavoro-piccola-attivita',
+        'file' => 'articles/0003-come-organizzare-turni-lavoro-piccola-attivita.php',
+        'title' => 'Come organizzare i turni di lavoro in una piccola attività',
+        'seo_title' => 'Come organizzare i turni di lavoro dei dipendenti',
+        'excerpt' => 'Una guida pratica per organizzare i turni di lavoro, gestire assenze e modifiche e capire quando un semplice foglio di calcolo non basta più.',
+        'seo_description' => 'Scopri come organizzare i turni di lavoro in una piccola attività, gestire assenze e modifiche e scegliere lo strumento più adatto.',
+        'category' => 'Web app custom',
+        'featured_image' => '/assets/images/0003/0032-dashboard.webp',
+        'image_alt' => '',
+        'gallery_folder' => '0003',
+        'date' => '2026-09-25',
+        'status' => 'pubblicato',
+        'visible' => true,
+        'youtube_url' => '',
+        'sn_frontpage' => 'n',
+    ],
 ];
 
 // Helper functions are required here so that every page which loads
