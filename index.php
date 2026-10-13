@@ -22,7 +22,7 @@ ob_start();
         <p class="hero__lead">Realizzo web app custom, siti web, automazioni e integrazioni AI per professionisti e piccole imprese.</p>
         <p class="text-muted">Parto da un’esigenza concreta e la trasformo in uno strumento semplice, utile e adatto al modo in cui lavori.</p>
         <div class="button-row">
-            <?= render_email_link($email, 'Parliamo del tuo progetto', 'button button--primary', 'Parliamo del tuo progetto') ?>
+            <?= render_google_form_link($google_form_url, 'Parliamo del tuo progetto', 'button button--primary') ?>
             <a class="button button--text" href="/blog-progetti.php">Scopri i progetti</a>
         </div>
     </div>
@@ -74,7 +74,7 @@ ob_start();
 
 <section class="section" aria-labelledby="about-title"><div class="wrap-wide about-strip"><div><p class="eyebrow">Chi sono</p><h2 id="about-title">Un professionista con cui parlare direttamente.</h2></div><div><p>Sono <?= htmlspecialchars($nome_cognome) ?>, sviluppatore web freelance. Da circa 20 anni lavoro su applicazioni e soluzioni web. Oggi aiuto soprattutto professionisti e piccole attività a costruire strumenti adatti alle loro esigenze.</p><a class="text-link" href="/chi-sono.php">Qualche parola su di me</a></div></div></section>
 
-<section class="section section--border"><div class="wrap-wide contact-panel"><p class="eyebrow">Facciamo il primo passo</p><h2>Hai un’esigenza che gli strumenti standard non risolvono?</h2><p>Possiamo partire dal problema e capire insieme se serve una web app custom, un sito, un’automazione o un altro tipo di soluzione.</p><?= render_email_link($email, 'Contattami', 'button button--primary', 'Vorrei parlarti di un progetto') ?></div></section>
+<section class="section section--border"><div class="wrap-wide contact-panel"><p class="eyebrow">Facciamo il primo passo</p><h2>Hai un’esigenza che gli strumenti standard non risolvono?</h2><p>Possiamo partire dal problema e capire insieme se serve una web app custom, un sito, un’automazione o un altro tipo di soluzione.</p><?= render_contact_actions($google_form_url, $email, 'Compila il modulo', 'Scrivimi via email', 'Vorrei parlarti di un progetto') ?></div></section>
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/includes/layout/layout.php';

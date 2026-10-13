@@ -16,7 +16,7 @@ ob_start();
     <div class="about-portrait"><img src="/assets/images/pablo2.webp" alt="<?= htmlspecialchars($nome_cognome) ?>, sviluppatore web freelance" loading="lazy"></div>
 </section>
 <section class="section section--border"><div class="wrap-wide split-section"><div><p class="eyebrow">Il mio approccio</p><h2>Prima il problema, poi gli strumenti.</h2></div><div><p>Il mio approccio è pragmatico: cerco di capire il problema, poi scelgo gli strumenti necessari per risolverlo.</p><p>Mi rivolgo principalmente a professionisti, piccoli imprenditori e attività che hanno bisogno di una soluzione concreta, senza complicazioni inutili.</p></div></div></section>
-<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Lavoriamo insieme</p><h2>Raccontami la tua esigenza.</h2><p>Puoi scrivermi anche se non hai ancora un progetto definito. Partiamo da ciò che vorresti migliorare.</p><?= render_email_link($email, 'Scrivimi', 'button button--primary', "Vorrei raccontarti un'esigenza") ?></div></section>
+<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Lavoriamo insieme</p><h2>Raccontami la tua esigenza.</h2><p>Puoi contattarmi anche se non hai ancora un progetto definito. Partiamo da ciò che vorresti migliorare.</p><?= render_contact_actions($google_form_url, $email, 'Compila il modulo', 'Scrivimi via email', "Vorrei raccontarti un'esigenza") ?></div></section>
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/includes/layout/layout.php';

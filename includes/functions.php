@@ -47,6 +47,30 @@ function render_email_link(string $email, ?string $label = null, string $class =
     return '<a' . $class_attribute . ' href="' . email_html_entities($href) . '">' . $text . '</a>';
 }
 
+function render_google_form_link(string $url, string $label, string $class = ''): string
+{
+    $class_attribute = $class === '' ? '' : ' class="' . htmlspecialchars($class, ENT_QUOTES, 'UTF-8') . '"';
+
+    return '<a' . $class_attribute
+        . ' href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '"'
+        . ' target="_blank" rel="noopener noreferrer">'
+        . htmlspecialchars($label, ENT_QUOTES, 'UTF-8')
+        . '</a>';
+}
+
+function render_contact_actions(
+    string $googleFormUrl,
+    string $email,
+    string $formLabel = 'Compila il modulo',
+    string $emailLabel = 'Scrivimi via email',
+    string $subject = ''
+): string {
+    return '<div class="button-row contact-actions">'
+        . render_google_form_link($googleFormUrl, $formLabel, 'button button--primary')
+        . render_email_link($email, $emailLabel, 'button button--text', $subject)
+        . '</div>';
+}
+
 
 /**
  * funzione che uso all'interno degli articoli per tirar fuori tutte le info dell'articolo scelto

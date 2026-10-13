@@ -32,7 +32,7 @@ ob_start();
         </nav>
     <?php endif; ?>
 </div></section>
-<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Il tuo progetto</p><h2>Hai un problema simile da risolvere?</h2><p>Scrivimi cosa vorresti semplificare. Possiamo ragionare insieme sulla soluzione più adatta.</p><?= render_email_link($email, 'Contattami', 'button button--primary', 'Parliamo di un progetto') ?></div></section>
+<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Il tuo progetto</p><h2>Hai un problema simile da risolvere?</h2><p>Raccontami cosa vorresti semplificare. Possiamo ragionare insieme sulla soluzione più adatta.</p><?= render_contact_actions($google_form_url, $email, 'Compila il modulo', 'Scrivimi via email', 'Parliamo di un progetto') ?></div></section>
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/includes/layout/layout.php';

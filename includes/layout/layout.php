@@ -58,7 +58,7 @@ $current_file = basename($_SERVER['SCRIPT_FILENAME'] ?? '');
                 <a href="/blog-progetti.php"<?= $current_file === 'blog-progetti.php' ? ' aria-current="page"' : '' ?>>Progetti</a>
                 <a href="/chi-sono.php"<?= $current_file === 'chi-sono.php' ? ' aria-current="page"' : '' ?>>Chi sono</a>
             </nav>
-            <?= render_email_link($email, 'Scrivimi', 'header-contact') ?>
+            <?= render_google_form_link($google_form_url, 'Contattami', 'header-contact') ?>
         </div>
     </header>
 

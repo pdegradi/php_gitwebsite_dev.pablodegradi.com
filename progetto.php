@@ -80,7 +80,7 @@ ob_start();
     <?php require_once __DIR__ . '/includes/components/project-gallery.php'; ?>
     <?= render_project_gallery($article) ?>
 </article>
-<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Hai un’esigenza simile?</p><h2>Possiamo parlarne partendo dal tuo caso.</h2><p>Ogni attività ha un modo diverso di lavorare. Raccontami cosa vorresti semplificare.</p><?= render_email_link($email, 'Contattami', 'button button--primary', 'Una soluzione per la mia attivita') ?></div></section>
+<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Hai un’esigenza simile?</p><h2>Possiamo parlarne partendo dal tuo caso.</h2><p>Ogni attività ha un modo diverso di lavorare. Raccontami cosa vorresti semplificare.</p><?= render_contact_actions($google_form_url, $email, 'Compila il modulo', 'Scrivimi via email', 'Una soluzione per la mia attivita') ?></div></section>
 <?php
 $content = ob_get_clean();
 $page_js = '<script src="/assets/js/project-gallery.js" defer></script>';

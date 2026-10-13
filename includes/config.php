@@ -35,8 +35,10 @@ $site_url         = "https://dev.pablodegradi.com";
 
 // Contatti: sostituisci i valori segnaposto prima della pubblicazione.
 $email            = "dev@pablodegradi.com";
+// Sostituisci questo segnaposto con il link pubblico del tuo Google Form.
+$google_form_url  = "https://forms.gle/INSERISCI_CODICE_FORM";
 $linkedin_url     = "https://www.linkedin.com/in/pablo-degradi";
-$youtube_channel_url = "https://www.youtube.com/@pablo-sviluppo-web-e-ai";
+$youtube_channel_url = "https://www.youtube.com/@pablo-ai-pratica";
 
 // Identità professionale e dati per le pagine legali.
 $vat_number       = "10407410967";

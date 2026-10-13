@@ -17,7 +17,7 @@ ob_start();
     <p class="eyebrow"><?= htmlspecialchars($service['eyebrow']) ?></p>
     <h1><?= htmlspecialchars($service['title']) ?><span class="accent-dot">.</span></h1>
     <p class="page-hero__intro"><?= htmlspecialchars($service['intro']) ?></p>
-    <?= render_email_link($email, 'Raccontami la tua esigenza', 'text-link', 'Informazioni: ' . $service['title']) ?>
+    <?= render_google_form_link($google_form_url, 'Raccontami la tua esigenza', 'text-link') ?>
 </section>
 <div class="wrap-wide service-sections">
     <?php foreach ($service['sections'] as $index => $section): ?>
@@ -29,7 +29,7 @@ ob_start();
         </section>
     <?php endforeach; ?>
 </div>
-<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Parliamone</p><h2><?= htmlspecialchars($service['cta_title']) ?></h2><p><?= htmlspecialchars($service['cta_text']) ?></p><?= render_email_link($email, $service['cta_label'], 'button button--primary', 'Informazioni: ' . $service['title']) ?></div></section>
+<section class="section"><div class="wrap-wide contact-panel"><p class="eyebrow">Parliamone</p><h2><?= htmlspecialchars($service['cta_title']) ?></h2><p><?= htmlspecialchars($service['cta_text']) ?></p><?= render_contact_actions($google_form_url, $email, $service['cta_label'], 'Scrivimi via email', 'Informazioni: ' . $service['title']) ?></div></section>
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/layout.php';
