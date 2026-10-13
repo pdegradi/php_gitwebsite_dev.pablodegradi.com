@@ -12,7 +12,7 @@
 
 <h2>La soluzione: una web app per gestire turni e assenze</h2>
 
-<p>Per affrontare questo problema ho realizzato una web app che riunisce in un unico strumento la gestione dei turni e delle assenze.</p>
+<p>Per esplorare questo problema, il prototipo dimostrativo riunisce in un unico strumento la gestione dei turni e delle assenze.</p>
 
 <p>L'amministratore può creare i dipendenti, definire i tipi di turno utilizzati dall'attività e organizzare il calendario settimanale o mensile.</p>
 

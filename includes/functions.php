@@ -68,7 +68,8 @@ function render_contact_actions(
     return '<div class="button-row contact-actions">'
         . render_google_form_link($googleFormUrl, $formLabel, 'button button--primary')
         . render_email_link($email, $emailLabel, 'button button--text', $subject)
-        . '</div>';
+        . '</div>'
+        . '<p class="contact-privacy-note">Nel modulo non inserire dati riservati dei tuoi clienti. <a href="/privacy.php">Leggi l’informativa privacy</a>.</p>';
 }
 
 

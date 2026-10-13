@@ -108,6 +108,12 @@ body.menu-open{overflow:hidden}
 .contact-panel .button{margin-top:16px}
 .contact-panel .contact-actions{margin-top:2.3rem}
 .contact-panel .contact-actions .button{margin-top:0}
+.contact-privacy-note{margin:14px 0 0;font-size:.82rem}
+.faq-list{display:grid;gap:12px;max-width:920px}
+.faq-list details{border:1px solid var(--line);background:var(--panel)}
+.faq-list summary{padding:18px 22px;color:var(--text);font-weight:700;cursor:pointer}
+.faq-list details[open] summary{border-bottom:1px solid var(--line)}
+.faq-list details p{margin:0;padding:18px 22px;color:var(--muted)}
 .page-hero{padding-block:clamp(72px,9vw,130px);max-width:1200px}
 .page-hero h1{max-width:940px}
 .page-hero__intro{max-width:880px;font-size:clamp(1.3rem,2vw,1.8rem);line-height:1.48}

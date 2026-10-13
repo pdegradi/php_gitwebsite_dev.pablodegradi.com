@@ -29,14 +29,16 @@ if ($app_debug) {
 
 $nome             = "Pablo";
 $nome_cognome     = "Pablo Degradi";
-$site_description = "Soluzioni web su misura per professionisti e piccole imprese.";
+$site_description = "Gestionali custom, siti web e AI per professionisti e piccole attività.";
 $site_lang        = "it";
 $site_url         = "https://dev.pablodegradi.com";
 
 // Contatti: sostituisci i valori segnaposto prima della pubblicazione.
 $email            = "dev@pablodegradi.com";
 // Sostituisci questo segnaposto con il link pubblico del tuo Google Form.
-$google_form_url  = "https://forms.gle/INSERISCI_CODICE_FORM";
+$google_form_url  = "https://docs.google.com/forms/d/e/1FAIpQLSeeqdjQ1WbhSutCyKV4cRE9EuteLsLro7HXmlesBPhSAJlTGw/viewform?usp=publish-editor";
+// Termine ordinario per le richieste che non diventano un rapporto professionale.
+$contact_request_retention = "12 mesi dall'ultimo contatto";
 $linkedin_url     = "https://www.linkedin.com/in/pablo-degradi";
 $youtube_channel_url = "https://www.youtube.com/@pablo-ai-pratica";
 
@@ -93,10 +95,10 @@ $articles = [
         'slug' => 'liberatorie-online-eventi',
         'file' => 'articles/0001-liberatorie-online-eventi.php',
         'title' => 'Liberatorie online per eventi: come raccoglierle e organizzarle',
-        'seo_title' => 'Liberatorie online per eventi: firme e gestione partecipanti',
-        'excerpt' => 'Come raccogliere le liberatorie prima e durante un evento, tenere traccia delle firme e ritrovare i documenti. L’esempio di WaiverHub.',
-        'seo_description' => 'Come organizzare la raccolta delle liberatorie online per eventi: invio del link, firma da smartphone, registro partecipanti e documenti. Il caso WaiverHub.',
-        'category' => 'Web app custom',
+        'seo_title' => 'Liberatorie online per eventi e firme',
+        'excerpt' => 'Come raccogliere le liberatorie prima e durante un evento, tenere traccia delle firme e ritrovare i documenti. Il prototipo WaiverHub.',
+        'seo_description' => 'Raccolta di liberatorie online per eventi: invio del link, firma da smartphone, registro partecipanti e documenti. Il prototipo WaiverHub.',
+        'category' => 'Gestionali custom',
         'featured_image' => '/assets/images/0001/0022_lista-eventi.png',
         'image_alt' => 'Schermata WaiverHub con l’elenco degli eventi e le azioni disponibili',
         'gallery_folder' => '0001',
@@ -110,10 +112,10 @@ $articles = [
         'slug' => 'gestione-segnalazioni-condominiali',
         'file' => 'articles/0002-gestione-segnalazioni-condominiali.php',
         'title' => 'Segnalazioni condominiali: come gestire guasti e interventi',
-        'seo_title' => 'Gestione segnalazioni condominiali: guasti e interventi',
-        'excerpt' => 'Un percorso chiaro per raccogliere i guasti, seguire gli interventi e confermare la soluzione. L’esempio di una web app realizzata.',
+        'seo_title' => 'Segnalazioni condominiali: gestione guasti',
+        'excerpt' => 'Un percorso chiaro per raccogliere i guasti, seguire gli interventi e confermare la soluzione. L’esempio di una web app dimostrativa.',
         'seo_description' => 'Come gestire le segnalazioni condominiali senza perdere richieste tra email e telefonate: ticket, stati, aggiornamenti e conferma della risoluzione.',
-        'category' => 'Web app custom',
+        'category' => 'Gestionali custom',
         'featured_image' => '/assets/images/0002/segnalazioni.png',
         'image_alt' => 'Elenco delle segnalazioni condominiali con categoria, priorità e stato',
         'gallery_folder' => '0002',
@@ -133,10 +135,10 @@ $articles = [
         'slug' => 'come-organizzare-turni-lavoro-piccola-attivita',
         'file' => 'articles/0003-come-organizzare-turni-lavoro-piccola-attivita.php',
         'title' => 'Come organizzare i turni di lavoro in una piccola attività',
-        'seo_title' => 'Come organizzare i turni di lavoro dei dipendenti',
+        'seo_title' => 'Organizzare i turni di lavoro',
         'excerpt' => 'Una guida pratica per organizzare i turni di lavoro, gestire assenze e modifiche e capire quando un semplice foglio di calcolo non basta più.',
         'seo_description' => 'Scopri come organizzare i turni di lavoro in una piccola attività, gestire assenze e modifiche e scegliere lo strumento più adatto.',
-        'category' => 'Web app custom',
+        'category' => 'Gestionali custom',
         'featured_image' => '/assets/images/0003/0032-dashboard.webp',
         'image_alt' => '',
         'gallery_folder' => '0003',

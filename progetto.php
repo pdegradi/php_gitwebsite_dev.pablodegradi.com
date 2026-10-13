@@ -22,7 +22,7 @@ $page_title = $article['seo_title'] ?? $article['title'];
 $seo = [
     'description' => $article['seo_description'] ?? $article['excerpt'] ?? '',
     'canonical' => $site_url . '/progetto.php?slug=' . rawurlencode($slug),
-    'og_title' => $article['title'] . ' · ' . $nome_cognome,
+    'og_title' => $page_title . ' · ' . $nome_cognome,
     'og_description' => $article['excerpt'] ?? '',
     'og_type' => 'article',
     'og_image' => !empty($article['featured_image']) ? $site_url . $article['featured_image'] : '',

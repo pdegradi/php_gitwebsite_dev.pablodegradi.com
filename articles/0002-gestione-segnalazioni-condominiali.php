@@ -16,7 +16,7 @@
 <p>Per le parti comuni, rendere visibile la richiesta agli altri residenti può aiutare a evitare duplicati. Per un problema interno all'appartamento, la visibilità deve invece restare limitata a chi lo ha aperto e all'amministratore.</p>
 
 <h2>Dalla segnalazione alla conferma della soluzione</h2>
-<p>Ho realizzato una web app che segue il percorso <strong>Inviata → Presa in carico → In lavorazione → Risolta → Chiusa</strong>. L'amministratore aggiunge una nota quando cambia lo stato, mentre commenti e notifiche email mantengono informate le persone coinvolte.</p>
+<p>Il prototipo dimostrativo segue il percorso <strong>Inviata → Presa in carico → In lavorazione → Risolta → Chiusa</strong>. L'amministratore aggiunge una nota quando cambia lo stato, mentre commenti e notifiche email mantengono informate le persone coinvolte.</p>
 <p>Il residente crea la richiesta con descrizione, categoria, priorità, allegati e visibilità privata o condivisa. Può anche collegarla a una segnalazione già chiusa, utile quando un guasto si ripresenta nello stesso punto.</p>
 <figure>
     <img class="zoomable" src="/assets/images/0002/nuova-segnalazione.png" alt="Modulo per aprire una segnalazione condominiale e scegliere categoria, priorità e visibilità" loading="lazy">

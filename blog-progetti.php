@@ -9,7 +9,7 @@ $page = max(1, min($page, $total_pages));
 $page_articles = array_slice($public_articles, ($page - 1) * $blog_page_size, $blog_page_size);
 $page_title = $page > 1 ? 'Progetti · pagina ' . $page : 'Progetti';
 $seo = [
-    'description' => 'Progetti realizzati: applicazioni web su misura e soluzioni digitali per professionisti e piccole attività.',
+    'description' => 'Prototipi dimostrativi di gestionali custom e applicazioni web, raccontati a partire dai problemi che aiutano a organizzare.',
     'canonical' => $site_url . ($page > 1 ? '/blog-progetti.php?page=' . $page : '/blog-progetti.php'),
     'og_title' => 'Progetti · ' . $nome_cognome,
     'og_type' => 'website',
@@ -17,10 +17,10 @@ $seo = [
 ob_start();
 ?>
 <section class="page-hero wrap-wide">
-    <p class="eyebrow">Lavori realizzati</p>
+    <p class="eyebrow">Prototipi dimostrativi</p>
     <h1>Progetti<span class="accent-dot">.</span></h1>
-    <p class="page-hero__intro">Le applicazioni che realizzo, raccontate a partire dai problemi che risolvono.</p>
-    <p class="text-muted">Per ogni progetto descrivo le scelte fatte, come funziona la soluzione e in quali contesti può essere utile.</p>
+    <p class="page-hero__intro">Prototipi realizzati per mostrare come un gestionale custom può organizzare un problema concreto.</p>
+    <p class="text-muted">Per ogni prototipo descrivo le scelte fatte, come funziona la soluzione e in quali contesti potrebbe essere utile.</p>
 </section>
 <section class="section section--border"><div class="wrap-wide">
     <?= render_project_cards($page_articles) ?>

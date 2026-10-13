@@ -15,7 +15,7 @@
 </ul>
 
 <h2>WaiverHub: un esempio concreto</h2>
-<p>Ho realizzato WaiverHub per riunire questi passaggi in una web app. L'organizzatore crea l'evento, sceglie o personalizza il testo della liberatoria e condivide il link o il codice QR. Il partecipante apre il modulo dal browser, inserisce i dati richiesti e traccia la firma sullo schermo, senza creare un account.</p>
+<p>WaiverHub è un prototipo dimostrativo che riunisce questi passaggi in una web app. L'organizzatore crea l'evento, sceglie o personalizza il testo della liberatoria e condivide il link o il codice QR. Il partecipante apre il modulo dal browser, inserisce i dati richiesti e traccia la firma sullo schermo, senza creare un account.</p>
 <p>Al termine, l'app genera un PDF con i dati della compilazione e invia una copia al firmatario. L'organizzatore riceve una notifica e trova il documento nel registro dell'evento, dove può anche esportare l'elenco dei partecipanti in CSV. Il modulo prevede percorsi distinti per adulti e minori e consente di raccogliere eventuali note sanitarie.</p>
 <h2>Cosa valutare prima di adottare un sistema simile</h2>
 <p>Il flusso tecnico non sostituisce la scelta dei testi da sottoporre ai partecipanti né la definizione di chi può accedere ai dati raccolti. Questo è particolarmente importante quando il modulo include informazioni sanitarie o riguarda minori.</p>

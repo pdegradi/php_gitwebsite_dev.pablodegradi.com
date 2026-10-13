@@ -51,10 +51,10 @@ $current_file = basename($_SERVER['SCRIPT_FILENAME'] ?? '');
                 <span></span><span></span><span></span>
             </button>
             <nav class="site-nav" id="site-nav" aria-label="Navigazione principale">
-                <a href="/servizi-web-app-custom.php"<?= $current_file === 'servizi-web-app-custom.php' ? ' aria-current="page"' : '' ?>>Web App</a>
+                <a href="/servizi-web-app-custom.php"<?= $current_file === 'servizi-web-app-custom.php' ? ' aria-current="page"' : '' ?>>Gestionali custom</a>
                 <a href="/servizi-siti-web.php"<?= $current_file === 'servizi-siti-web.php' ? ' aria-current="page"' : '' ?>>Siti Web</a>
-                <a href="/servizi-automazioni-ai.php"<?= $current_file === 'servizi-automazioni-ai.php' ? ' aria-current="page"' : '' ?>>Automazioni e AI</a>
-                <a href="/servizi-consulenza-formazione.php"<?= $current_file === 'servizi-consulenza-formazione.php' ? ' aria-current="page"' : '' ?>>Consulenza</a>
+                <a href="/servizi-automazioni-ai.php"<?= $current_file === 'servizi-automazioni-ai.php' ? ' aria-current="page"' : '' ?>>AI per la tua attività</a>
+                <a href="/servizi-consulenza-formazione.php"<?= $current_file === 'servizi-consulenza-formazione.php' ? ' aria-current="page"' : '' ?>>Consulenza e Formazione</a>
                 <a href="/blog-progetti.php"<?= $current_file === 'blog-progetti.php' ? ' aria-current="page"' : '' ?>>Progetti</a>
                 <a href="/chi-sono.php"<?= $current_file === 'chi-sono.php' ? ' aria-current="page"' : '' ?>>Chi sono</a>
             </nav>
@@ -68,8 +68,8 @@ $current_file = basename($_SERVER['SCRIPT_FILENAME'] ?? '');
 
     <footer class="site-footer">
         <div class="wrap-wide footer-main">
-            <div><a class="footer-brand" href="/index.php"><?= htmlspecialchars($nome) ?><span class="accent-dot">.</span></a><p>Soluzioni web su misura per professionisti e piccole imprese.</p></div>
-            <div><h2>Esplora</h2><a href="/servizi-web-app-custom.php">Web App Custom</a><a href="/servizi-siti-web.php">Siti Web</a><a href="/servizi-automazioni-ai.php">Automazioni e AI</a><a href="/servizi-consulenza-formazione.php">Consulenza e Formazione</a><a href="/blog-progetti.php">Progetti</a><a href="/chi-sono.php">Chi sono</a></div>
+            <div><a class="footer-brand" href="/index.php"><?= htmlspecialchars($nome) ?><span class="accent-dot">.</span></a><p>Gestionali custom, siti web e AI per la tua attività.</p></div>
+            <div><h2>Esplora</h2><a href="/servizi-web-app-custom.php">Gestionali custom</a><a href="/servizi-siti-web.php">Siti Web</a><a href="/servizi-automazioni-ai.php">AI per la tua attività</a><a href="/servizi-consulenza-formazione.php">Consulenza e Formazione</a><a href="/blog-progetti.php">Progetti</a><a href="/chi-sono.php">Chi sono</a></div>
             <div>
                 <h2>Contatti</h2>
                 <?= render_email_link($email) ?>
